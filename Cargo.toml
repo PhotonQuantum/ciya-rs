@@ -1,0 +1,33 @@
+[package]
+name = "ciya-rs"
+version = "0.1.0"
+authors = ["PhotonQuantum <self@lightquantum.me>"]
+edition = "2018"
+
+[lib]
+name = "ciya_lib"
+path = "src/lib.rs"
+
+[[bin]]
+name = "ciya_bin"
+path = "src/main.rs"
+
+[profile.release]
+lto = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+image = "0.23"
+imageproc = "0.22"
+ndarray = { version = "0.13", features = ["rayon"] }
+ndarray-image = "0.2"
+num = "0.3"
+opencv = "0.51"
+onnxruntime = "0.0.11"
+tempfile = "3.2"
+itertools = "0.10"
+thiserror = "1.0"
+anyhow = "1.0"
+lazy_static = "1.1"
+show-image = {version="0.8", features=["image"]}
