@@ -1,3 +1,5 @@
 /target
 /*.png
 /.idea
+!/avatar3.png
+!/result.png
