@@ -1,6 +1,6 @@
 use std::io::Cursor;
 
-use image::imageops::FilterType;
+use image::imageops::{self, FilterType};
 use image::io::Reader as ImageReader;
 use image::{DynamicImage, ImageFormat, Rgba, RgbaImage};
 use imageproc::geometric_transformations::{Interpolation, Projection};
@@ -14,14 +14,18 @@ const CIYA_RAW: &[u8] = include_bytes!("../resources/ciya.png");
 
 pub struct Projector {
     ciya_image: RgbaImage,
+    flipped_ciya_image: RgbaImage
 }
 
 impl Projector {
     pub fn new() -> Self {
-        let mut image = ImageReader::new(Cursor::new(CIYA_RAW));
-        image.set_format(ImageFormat::Png);
+        let mut image_raw = ImageReader::new(Cursor::new(CIYA_RAW));
+        image_raw.set_format(ImageFormat::Png);
+        let image = image_raw.decode().unwrap().into_rgba8();
+        let flipped_image = imageops::flip_vertical(&image);
         Self {
-            ciya_image: image.decode().unwrap().into_rgba8(),
+            ciya_image: image,
+            flipped_ciya_image: flipped_image
         }
     }
 
@@ -31,6 +35,7 @@ impl Projector {
         control_points: ControlPoints<f32>,
         antialias_scale: u32,
     ) -> Result<DynamicImage> {
+        let smiling = is_smile(&control_points);
         let (ciya_ctrl_pts, target_ctrl_pts) = if !control_points.is_convex() {
             (
                 ControlPoints::from(&Rectangle::new(
@@ -50,7 +55,7 @@ impl Projector {
                 let y = 200. * factor;
 
                 // \frac{(x-180)^2}{180^2} + \frac{y^2}{200^2} = 1
-                let d = if is_smile(&target_ctrl_pts) {
+                let d = if smiling {
                     (1. - y.pow(2.) / 40000.).sqrt()
                 } else {
                     let y = 200. - y;
@@ -84,7 +89,7 @@ impl Projector {
             rebased_rb.y * antialias_scale,
         );
         imageproc::geometric_transformations::warp_into(
-            &self.ciya_image,
+            if smiling {&self.ciya_image} else {&self.flipped_ciya_image},
             &projection,
             Interpolation::Bicubic,
             Rgba([0, 0, 0, 0]),
