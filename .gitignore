@@ -1,5 +1,7 @@
 /target
 /*.png
 /.idea
+/_build
+/dist
 !/avatar3.png
 !/result.png

@@ -9,7 +9,7 @@ name = "ciya_lib"
 path = "src/lib.rs"
 
 [[bin]]
-name = "ciya_bin"
+name = "ciya_cli"
 path = "src/main.rs"
 
 [profile.release]
