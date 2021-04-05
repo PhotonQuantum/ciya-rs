@@ -2,12 +2,25 @@
 
 Ciyaify your image.
 
-This is a WIP.
+![from](examples/original.png)
+![to](examples/result.png)
 
-![from](avatar3.png)
-![to](result.png)
+## Get Started
 
-Todo:
+> Currently only Linux is supported.
+
+### Linux
+
+- Install OpenCV library. Make sure to install `-dev` packages if your distribution provides.
+
+> For Archlinux users:
+> 
+> Install OpenCV 4.5.1, not the latest version which is unsupported.
+
+- ``` make cli ```
+- Built binaries are located in `dist` directory.
+
+## Todo
 
 - [ ] `detectors::StandardDetector`
 - [ ] tg bot

@@ -245,12 +245,15 @@ impl<T: Num + NumCast + PartialOrd + Copy> ControlPoints<T> {
             p4: self.p4,
         }
     }
+    #[allow(clippy::match_like_matches_macro)]
     pub fn is_convex(&self) -> bool {
         let Point { x: _, y: y0 } = self.cross();
-        if let Ordering::Less = y0.partial_cmp(&self.p2.y).unwrap() {
-            false
+        if let Ordering::Greater = y0.partial_cmp(&self.p2.y).unwrap() {
+            true
+        } else if let Ordering::Less = y0.partial_cmp(&self.p4.y).unwrap() {
+            true
         } else {
-            !matches!(y0.partial_cmp(&self.p4.y).unwrap(), Ordering::Greater)
+            false
         }
     }
     pub fn shift_origin(&self) -> (Point<T>, Point<T>, Self) {
