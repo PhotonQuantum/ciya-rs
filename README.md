@@ -10,7 +10,6 @@ This is a WIP.
 Todo:
 
 - [ ] `detectors::StandardDetector`
-- [ ] cli support
 - [ ] tg bot
 - [ ] release (deal with onnxruntime)
 - [ ] add a proper license

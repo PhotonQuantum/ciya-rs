@@ -1,9 +1,10 @@
-use crate::errors::Result;
+use image::DynamicImage;
 
+pub use weeb::WeebDetector;
+
+use crate::errors::Result;
 // pub use standard::StandardDetector;
 use crate::types::ControlPoints;
-use image::DynamicImage;
-pub use weeb::WeebDetector;
 
 mod weeb;
 

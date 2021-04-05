@@ -14,7 +14,7 @@ const CIYA_RAW: &[u8] = include_bytes!("../resources/ciya.png");
 
 pub struct Projector {
     ciya_image: RgbaImage,
-    flipped_ciya_image: RgbaImage
+    flipped_ciya_image: RgbaImage,
 }
 
 impl Projector {
@@ -25,7 +25,7 @@ impl Projector {
         let flipped_image = imageops::flip_vertical(&image);
         Self {
             ciya_image: image,
-            flipped_ciya_image: flipped_image
+            flipped_ciya_image: flipped_image,
         }
     }
 
@@ -79,9 +79,9 @@ impl Projector {
         let (bound_lt, bound_rb, base_landmarks) = target_ctrl_pts.shift_origin();
         let projection = Projection::scale(antialias_scale as f32, antialias_scale as f32)
             * Projection::from_control_points((&ciya_ctrl_pts).into(), (&base_landmarks).into())
-                .ok_or_else(|| Error::MathError(String::from(
-                    "unable to compute projection matrix",
-                )))?;
+                .ok_or_else(|| {
+                    Error::MathError(String::from("unable to compute projection matrix"))
+                })?;
 
         let rebased_rb = Point::<u32>::from(&(bound_rb - bound_lt));
         let mut warped_ciya = RgbaImage::new(
@@ -89,7 +89,11 @@ impl Projector {
             rebased_rb.y * antialias_scale,
         );
         imageproc::geometric_transformations::warp_into(
-            if smiling {&self.ciya_image} else {&self.flipped_ciya_image},
+            if smiling {
+                &self.ciya_image
+            } else {
+                &self.flipped_ciya_image
+            },
             &projection,
             Interpolation::Bicubic,
             Rgba([0, 0, 0, 0]),

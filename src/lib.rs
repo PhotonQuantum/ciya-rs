@@ -6,6 +6,6 @@
 mod types;
 pub mod ciyafier;
 mod convert;
-mod detectors;
+pub mod detectors;
 mod errors;
 mod projector;

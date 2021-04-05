@@ -1,8 +1,8 @@
 use std::cmp::Ordering;
 use std::convert::TryFrom;
+use std::ops::{Add, Div, Mul, Sub};
 
 use num::{Num, NumCast};
-use std::ops::{Add, Div, Mul, Sub};
 
 #[macro_export]
 macro_rules! cast {
@@ -249,7 +249,9 @@ impl<T: Num + NumCast + PartialOrd + Copy> ControlPoints<T> {
         let Point { x: _, y: y0 } = self.cross();
         if let Ordering::Less = y0.partial_cmp(&self.p2.y).unwrap() {
             false
-        } else { !matches!(y0.partial_cmp(&self.p4.y).unwrap(), Ordering::Greater) }
+        } else {
+            !matches!(y0.partial_cmp(&self.p4.y).unwrap(), Ordering::Greater)
+        }
     }
     pub fn shift_origin(&self) -> (Point<T>, Point<T>, Self) {
         let cross = self.cross();

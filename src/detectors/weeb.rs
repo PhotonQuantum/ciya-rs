@@ -1,7 +1,6 @@
 use std::cell::RefCell;
 use std::cmp::{max, min, Ordering};
 use std::convert::TryInto;
-use std::io::Write;
 
 use image::imageops::FilterType;
 use image::DynamicImage;
@@ -15,7 +14,6 @@ use onnxruntime::environment::Environment;
 use onnxruntime::session::Session;
 use onnxruntime::tensor::OrtOwnedTensor;
 use opencv::core::{Rect, Size};
-
 use opencv::objdetect::{CascadeClassifier, CascadeClassifierTrait};
 use opencv::prelude::*;
 use opencv::types::VectorOfRect;
@@ -25,8 +23,6 @@ use crate::detectors::MouthDetectorTrait;
 use crate::errors::{Error, Result};
 use crate::types::*;
 
-const FACE_MODEL: &[u8] = include_bytes!("../../resources/lbpcascade_animeface.xml");
-const LANDMARK_MODEL: &[u8] = include_bytes!("../../resources/anime_face_landmark.onnx");
 lazy_static! {
     static ref ENV: Environment = Environment::builder()
         .with_name("anime_landmark_detector")
@@ -40,16 +36,12 @@ pub struct WeebDetector<'a> {
 }
 
 impl<'a> WeebDetector<'a> {
-    pub fn new() -> Result<Self> {
+    pub fn new(face_model: &str, landmark_model: &str) -> Result<Self> {
         let session: Session = ENV
             .new_session_builder()?
-            .with_model_from_memory(LANDMARK_MODEL)?;
-        let mut face_model_file = tempfile::NamedTempFile::new().unwrap();
-        face_model_file.write_all(FACE_MODEL)?;
+            .with_model_from_file(landmark_model.to_string())?;
         Ok(Self {
-            face_detector: RefCell::new(
-                CascadeClassifier::new(&*face_model_file.path().to_string_lossy()).unwrap(),
-            ),
+            face_detector: RefCell::new(CascadeClassifier::new(face_model).unwrap()),
             landmark_detector: RefCell::new(session),
         })
     }
