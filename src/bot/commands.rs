@@ -86,4 +86,6 @@ pub enum Command {
     Ciyaify(Result<Opt, anyhow::Error>),
     #[command(rename = "lowercase", description = "help of this bot.")]
     Help,
+    #[command(rename = "lowercase", description = "help of this bot.")]
+    Start,
 }
