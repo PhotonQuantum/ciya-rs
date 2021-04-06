@@ -246,17 +246,17 @@ impl<T: Num + NumCast + PartialOrd + Copy> ControlPoints<T> {
         }
     }
     #[allow(clippy::match_like_matches_macro)]
-    pub fn is_convex(&self) -> bool {
+    pub fn is_convex(&self) -> Option<bool> {
         let Point { x: _, y: y0 } = self.cross();
-        if let Ordering::Greater = y0.partial_cmp(&self.p2.y).unwrap() {
+        Some(if let Ordering::Greater = y0.partial_cmp(&self.p2.y)? {
             true
-        } else if let Ordering::Less = y0.partial_cmp(&self.p4.y).unwrap() {
+        } else if let Ordering::Less = y0.partial_cmp(&self.p4.y)? {
             true
         } else {
             false
-        }
+        })
     }
-    pub fn shift_origin(&self) -> (Point<T>, Point<T>, Self) {
+    pub fn shift_origin(&self) -> Option<(Point<T>, Point<T>, Self)> {
         let cross = self.cross();
 
         let left_top = self.p1 - cross + self.p2;
@@ -265,15 +265,15 @@ impl<T: Num + NumCast + PartialOrd + Copy> ControlPoints<T> {
         let right_bottom = self.p3 - cross + self.p4;
 
         let bound_left_top = Point::new(
-            unsafe_poset_min(left_top.x, left_bottom.x) - cast!(4),
-            unsafe_poset_min(left_top.y, right_top.y) - cast!(4),
+            poset_min(left_top.x, left_bottom.x)? - cast!(4),
+            poset_min(left_top.y, right_top.y)? - cast!(4),
         );
         let bound_right_bottom = Point::new(
-            unsafe_poset_max(right_top.x, right_bottom.x) + cast!(4),
-            unsafe_poset_min(left_bottom.y, right_bottom.y) + cast!(4),
+            poset_max(right_top.x, right_bottom.x)? + cast!(4),
+            poset_min(left_bottom.y, right_bottom.y)? + cast!(4),
         );
 
-        (bound_left_top, bound_right_bottom, *self - bound_left_top)
+        Some((bound_left_top, bound_right_bottom, *self - bound_left_top))
     }
 }
 
@@ -344,7 +344,7 @@ impl<T: Num + NumCast + PartialOrd + Copy> From<&ControlPoints<T>> for [(T, T); 
     }
 }
 
-pub fn user_abs_minus<T: Num + NumCast + PartialOrd + Copy>(m: T, n: T) -> T {
+pub fn user_abs_minus<T: Num + NumCast + PartialOrd + Copy>(m: T, n: T) -> Option<T> {
     m.partial_cmp(&n)
         .map(|ord| {
             if let Ordering::Less = ord {
@@ -353,17 +353,14 @@ pub fn user_abs_minus<T: Num + NumCast + PartialOrd + Copy>(m: T, n: T) -> T {
                 m - n
             }
         })
-        .unwrap()
 }
 
-pub fn unsafe_poset_min<T: PartialOrd>(m: T, n: T) -> T {
+pub fn poset_min<T: PartialOrd>(m: T, n: T) -> Option<T> {
     m.partial_cmp(&n)
         .map(|ord| if let Ordering::Less = ord { m } else { n })
-        .unwrap()
 }
 
-pub fn unsafe_poset_max<T: PartialOrd>(m: T, n: T) -> T {
+pub fn poset_max<T: PartialOrd>(m: T, n: T) -> Option<T> {
     m.partial_cmp(&n)
         .map(|ord| if let Ordering::Greater = ord { m } else { n })
-        .unwrap()
 }

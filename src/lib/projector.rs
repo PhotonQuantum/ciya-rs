@@ -43,7 +43,7 @@ impl Projector {
         emotion: Emotion,
         antialias_scale: u32,
     ) -> Result<DynamicImage> {
-        let smiling = is_smile(&control_points);
+        let smiling = is_smile(&control_points).ok_or_else(|| Error::MathError(String::from("invalid control points")))?;
         let ciya = match emotion {
             Emotion::Auto => {
                 if smiling {
@@ -56,9 +56,9 @@ impl Projector {
             Emotion::Cry => &self.flipped_ciya_image,
         };
 
-        let (bound_lt, bound_rb, projection) = if !control_points.is_convex() {
+        let (bound_lt, bound_rb, projection) = if !control_points.is_convex().ok_or_else(|| Error::MathError(String::from("invalid control points")))? {
             let (ciya_ctrl_pts, target_ctrl_pts) = self.calc_ctrl_pts(control_points, true, true);
-            let (bound_lt, bound_rb, base_landmarks) = target_ctrl_pts.shift_origin();
+            let (bound_lt, bound_rb, base_landmarks) = target_ctrl_pts.shift_origin().ok_or_else(|| Error::MathError(String::from("invalid control points")))?;
             let projection = Projection::scale(antialias_scale as f32, antialias_scale as f32)
                 * Projection::from_control_points(
                     (&ciya_ctrl_pts).into(),
@@ -71,7 +71,7 @@ impl Projector {
         } else {
             let (ciya_ctrl_pts, target_ctrl_pts) =
                 self.calc_ctrl_pts(control_points, false, smiling);
-            let (bound_lt, bound_rb, base_landmarks) = target_ctrl_pts.shift_origin();
+            let (bound_lt, bound_rb, base_landmarks) = target_ctrl_pts.shift_origin().ok_or_else(|| Error::MathError(String::from("invalid control points")))?;
             let upscale_projection =
                 Projection::scale(antialias_scale as f32, antialias_scale as f32);
             Projection::from_control_points((&ciya_ctrl_pts).into(), (&base_landmarks).into())
@@ -80,7 +80,7 @@ impl Projector {
                     // fallback to naive projection
                     let (ciya_ctrl_pts, target_ctrl_pts) =
                         self.calc_ctrl_pts(control_points, true, true);
-                    let (bound_lt, bound_rb, base_landmarks) = target_ctrl_pts.shift_origin();
+                    let (bound_lt, bound_rb, base_landmarks) = target_ctrl_pts.shift_origin()?;
                     let projection = Projection::from_control_points(
                         (&ciya_ctrl_pts).into(),
                         (&base_landmarks).into(),
@@ -170,7 +170,7 @@ impl Projector {
     }
 }
 
-fn is_smile<T: Num + NumCast + PartialOrd + Copy>(control_points: &ControlPoints<T>) -> bool {
+fn is_smile<T: Num + NumCast + PartialOrd + Copy>(control_points: &ControlPoints<T>) -> Option<bool> {
     let Point { x: _, y: y0 } = control_points.cross();
-    user_abs_minus(control_points.p2.y, y0) <= user_abs_minus(control_points.p4.y, y0)
+    Some(user_abs_minus(control_points.p2.y, y0)? <= user_abs_minus(control_points.p4.y, y0)?)
 }
