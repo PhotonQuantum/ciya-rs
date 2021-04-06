@@ -71,14 +71,23 @@ fn image_from_message(message: &Message) -> Option<&str> {
 }
 
 fn decode_image(bytes: &[u8]) -> Result<DynamicImage> {
-    let guessed_image = ImageReader::new(Cursor::new(bytes))
-        .with_guessed_format()?;
+    let guessed_image = ImageReader::new(Cursor::new(bytes)).with_guessed_format()?;
     if let Some(ImageFormat::WebP) = guessed_image.format() {
         let decoder = webp::Decoder::new(bytes);
-        Ok(decoder.decode().ok_or_else(|| anyhow!("some decode thing failed"))?.as_image())
+        Ok(decoder
+            .decode()
+            .ok_or_else(|| anyhow!("some decode thing failed"))?
+            .as_image())
     } else {
         Ok(guessed_image.decode()?)
     }
+    .and_then(|image| {
+        if image.width() > 4096 || image.height() > 4096 {
+            Err(anyhow!("Image too large"))
+        } else {
+            Ok(image)
+        }
+    })
 }
 
 async fn answer(cx: UpdateWithCx<AutoSend<Bot>, Message>, command: Command) -> Result<()> {
