@@ -75,7 +75,7 @@ impl Projector {
             let upscale_projection =
                 Projection::scale(antialias_scale as f32, antialias_scale as f32);
             Projection::from_control_points((&ciya_ctrl_pts).into(), (&base_landmarks).into())
-                .map(|projection| (bound_lt, bound_rb, upscale_projection * projection))
+                .map(|projection| (bound_lt, bound_rb, projection))
                 .or_else(|| {
                     // fallback to naive projection
                     let (ciya_ctrl_pts, target_ctrl_pts) =
