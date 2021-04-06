@@ -34,7 +34,7 @@ impl From<CliEmotion> for Emotion {
         match v {
             CliEmotion::Auto => Emotion::Auto,
             CliEmotion::Smile => Emotion::Smile,
-            CliEmotion::Cry => Emotion::Cry
+            CliEmotion::Cry => Emotion::Cry,
         }
     }
 }
@@ -56,7 +56,7 @@ struct Opt {
     #[structopt(short, long, possible_values = & CliEmotion::variants(), case_insensitive = true, default_value = "auto")]
     emotion: CliEmotion,
     #[structopt(short, long, default_value = "8")]
-    antialias_scale: u32
+    antialias_scale: u32,
 }
 
 fn main() -> Result<()> {

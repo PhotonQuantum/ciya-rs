@@ -7,5 +7,5 @@ mod types;
 pub mod ciyafier;
 mod convert;
 pub mod detectors;
-mod errors;
+pub mod errors;
 mod projector;

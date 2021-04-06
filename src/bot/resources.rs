@@ -1,10 +1,10 @@
 use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::sync::Once;
 
 use anyhow::{anyhow, Result};
 use reqwest::blocking::Client;
-use std::sync::Once;
 
 const FACE_MODEL_URL: &str = "https://raw.githubusercontent.com/nagadomi/lbpcascade_animeface/master/lbpcascade_animeface.xml";
 const LANDMARK_MODEL_URL: &str =
