@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use std::convert::TryFrom;
 use std::ops::{Add, Div, Mul, Sub};
 
-use num::{Num, NumCast};
+use num::{Num, NumCast, Float};
 
 #[macro_export]
 macro_rules! cast {
@@ -15,6 +15,12 @@ macro_rules! cast {
 pub struct Point<T: Num + NumCast + PartialOrd + Copy> {
     pub x: T,
     pub y: T,
+}
+
+impl<T: Float> Point<T> {
+    pub fn is_irregular(&self) -> bool {
+        self.x.is_nan() || self.y.is_nan() || self.x.is_infinite() || self.y.is_infinite()
+    }
 }
 
 impl<T: Num + NumCast + PartialOrd + Copy> Add for Point<T> {
@@ -98,6 +104,13 @@ pub struct Rectangle<T: Num + NumCast + PartialOrd + Copy> {
     pub h: T,
 }
 
+impl<T: Float> Rectangle<T> {
+    pub fn is_irregular(&self) -> bool {
+        self.x.is_nan() || self.y.is_nan() || self.w.is_nan() || self.h.is_nan() ||
+            self.x.is_infinite() || self.y.is_infinite() || self.w.is_infinite() || self.h.is_infinite()
+    }
+}
+
 impl<T: Num + NumCast + PartialOrd + Copy> Rectangle<T> {
     pub fn new(x: T, y: T, w: T, h: T) -> Self {
         Rectangle { x, y, w, h }
@@ -123,6 +136,12 @@ pub struct ControlPoints<T: Num + NumCast + PartialOrd + Copy> {
     pub p2: Point<T>,
     pub p3: Point<T>,
     pub p4: Point<T>,
+}
+
+impl<T: Float> ControlPoints<T> {
+    pub fn is_irregular(&self) -> bool {
+        self.p1.is_irregular() || self.p2.is_irregular() || self.p3.is_irregular() || self.p4.is_irregular()
+    }
 }
 
 impl<T: Num + NumCast + PartialOrd + Copy> Add<Point<T>> for ControlPoints<T> {

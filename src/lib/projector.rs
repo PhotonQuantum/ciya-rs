@@ -43,7 +43,8 @@ impl Projector {
         emotion: Emotion,
         antialias_scale: u32,
     ) -> Result<DynamicImage> {
-        let smiling = is_smile(&control_points).ok_or_else(|| Error::MathError(String::from("invalid control points")))?;
+        let smiling = is_smile(&control_points)
+            .ok_or_else(|| Error::MathError(String::from("invalid control points")))?;
         let ciya = match emotion {
             Emotion::Auto => {
                 if smiling {
@@ -56,36 +57,55 @@ impl Projector {
             Emotion::Cry => &self.flipped_ciya_image,
         };
 
-        let (bound_lt, bound_rb, projection) = if !control_points.is_convex().ok_or_else(|| Error::MathError(String::from("invalid control points")))? {
-            let (ciya_ctrl_pts, target_ctrl_pts) = self.calc_ctrl_pts(control_points, true, true);
-            let (bound_lt, bound_rb, base_landmarks) = target_ctrl_pts.shift_origin().ok_or_else(|| Error::MathError(String::from("invalid control points")))?;
-            let projection = Projection::scale(antialias_scale as f32, antialias_scale as f32)
-                * Projection::from_control_points(
-                    (&ciya_ctrl_pts).into(),
-                    (&base_landmarks).into(),
-                )
+        let (bound_lt, bound_rb, projection) = if !control_points
+            .is_convex()
+            .ok_or_else(|| Error::MathError(String::from("invalid control points")))?
+        {
+            self.calc_ctrl_pts(control_points, true, true)
+                .and_then(|(ciya_ctrl_pts, target_ctrl_pts)| {
+                    target_ctrl_pts.shift_origin().and_then(
+                        |(bound_lt, bound_rb, base_landmarks)| {
+                            Projection::from_control_points(
+                                (&ciya_ctrl_pts).into(),
+                                (&base_landmarks).into(),
+                            )
+                            .map(|projection| (bound_lt, bound_rb, projection))
+                        },
+                    )
+                })
                 .ok_or_else(|| {
                     Error::MathError(String::from("unable to compute projection matrix"))
-                })?;
-            (bound_lt, bound_rb, projection)
+                })?
         } else {
-            let (ciya_ctrl_pts, target_ctrl_pts) =
-                self.calc_ctrl_pts(control_points, false, smiling);
-            let (bound_lt, bound_rb, base_landmarks) = target_ctrl_pts.shift_origin().ok_or_else(|| Error::MathError(String::from("invalid control points")))?;
             let upscale_projection =
                 Projection::scale(antialias_scale as f32, antialias_scale as f32);
-            Projection::from_control_points((&ciya_ctrl_pts).into(), (&base_landmarks).into())
-                .map(|projection| (bound_lt, bound_rb, projection))
+            self.calc_ctrl_pts(control_points, false, smiling)
+                .and_then(|(ciya_ctrl_pts, target_ctrl_pts)| {
+                    target_ctrl_pts.shift_origin().and_then(
+                        |(bound_lt, bound_rb, base_landmarks)| {
+                            Projection::from_control_points(
+                                (&ciya_ctrl_pts).into(),
+                                (&base_landmarks).into(),
+                            )
+                            .map(|projection| (bound_lt, bound_rb, projection))
+                        },
+                    )
+                })
                 .or_else(|| {
                     // fallback to naive projection
-                    let (ciya_ctrl_pts, target_ctrl_pts) =
-                        self.calc_ctrl_pts(control_points, true, true);
-                    let (bound_lt, bound_rb, base_landmarks) = target_ctrl_pts.shift_origin()?;
-                    let projection = Projection::from_control_points(
-                        (&ciya_ctrl_pts).into(),
-                        (&base_landmarks).into(),
-                    )?;
-                    Some((bound_lt, bound_rb, projection))
+                    self.calc_ctrl_pts(control_points, true, true).and_then(
+                        |(ciya_ctrl_pts, target_ctrl_pts)| {
+                            target_ctrl_pts.shift_origin().and_then(
+                                |(bound_lt, bound_rb, base_landmarks)| {
+                                    Projection::from_control_points(
+                                        (&ciya_ctrl_pts).into(),
+                                        (&base_landmarks).into(),
+                                    )
+                                    .map(|projection| (bound_lt, bound_rb, projection))
+                                },
+                            )
+                        },
+                    )
                 })
                 .map(|(bound_lt, bound_rb, projection)| {
                     (bound_lt, bound_rb, upscale_projection * projection)
@@ -127,8 +147,8 @@ impl Projector {
         control_points: ControlPoints<f32>,
         naive: bool,
         smiling: bool,
-    ) -> (ControlPoints<f32>, ControlPoints<f32>) {
-        if naive {
+    ) -> Option<(ControlPoints<f32>, ControlPoints<f32>)> {
+        let (ciya_ctrl_pts, target_ctrl_pts) = if naive {
             (
                 ControlPoints::from(&Rectangle::new(
                     0.,
@@ -166,11 +186,18 @@ impl Projector {
                 )
             };
             (ciya_ctrl_pts, target_ctrl_pts)
+        };
+        if ciya_ctrl_pts.is_irregular() || target_ctrl_pts.is_irregular() {
+            None
+        } else {
+            Some((ciya_ctrl_pts, target_ctrl_pts))
         }
     }
 }
 
-fn is_smile<T: Num + NumCast + PartialOrd + Copy>(control_points: &ControlPoints<T>) -> Option<bool> {
+fn is_smile<T: Num + NumCast + PartialOrd + Copy>(
+    control_points: &ControlPoints<T>,
+) -> Option<bool> {
     let Point { x: _, y: y0 } = control_points.cross();
     Some(user_abs_minus(control_points.p2.y, y0)? <= user_abs_minus(control_points.p4.y, y0)?)
 }
