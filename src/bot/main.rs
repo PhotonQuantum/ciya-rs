@@ -210,6 +210,6 @@ async fn main() {
 
     let bot = Bot::from_env().auto_send();
 
-    let bot_name: String = "ciya_bot".to_string();
+    let bot_name: String = "ciyaify_bot".to_string();
     teloxide::commands_repl(bot, bot_name, answer).await;
 }
