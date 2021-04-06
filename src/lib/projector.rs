@@ -171,6 +171,6 @@ impl Projector {
 }
 
 fn is_smile<T: Num + NumCast + PartialOrd + Copy>(control_points: &ControlPoints<T>) -> bool {
-    let Point { x: x0, y: _ } = control_points.cross();
-    user_abs_minus(control_points.p2.x, x0) <= user_abs_minus(control_points.p4.x, x0)
+    let Point { x: _, y: y0 } = control_points.cross();
+    user_abs_minus(control_points.p2.y, y0) <= user_abs_minus(control_points.p4.y, y0)
 }
