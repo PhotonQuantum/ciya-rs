@@ -2,8 +2,7 @@ use std::str::FromStr;
 
 use clap::arg_enum;
 use structopt::StructOpt;
-use teloxide::utils::command::ParseError;
-use teloxide::{prelude::*, utils::command::BotCommand};
+use teloxide::utils::command::{BotCommand, ParseError};
 use thiserror::Error;
 
 use ciya_lib::ciyafier::Emotion;

@@ -6,7 +6,7 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::io::{Cursor, SeekFrom};
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, Result};
 use image::io::Reader as ImageReader;
 use image::{DynamicImage, GenericImageView, ImageFormat};
 use structopt::StructOpt;
@@ -15,11 +15,11 @@ use teloxide::prelude::*;
 use teloxide::types::{ChatAction, InputFile, Message, PhotoSize};
 use tokio::io::{AsyncReadExt, AsyncSeekExt};
 
-use ciya_lib::ciyafier::{Ciyafier, Emotion};
+use ciya_lib::ciyafier::Ciyafier;
 use ciya_lib::detectors::WeebDetector;
 use ciya_lib::errors::Error;
 
-use crate::commands::{Command, FormatError, Mode, Opt};
+use crate::commands::{Command, Mode, Opt};
 use crate::resources::ensure_models;
 
 mod commands;
