@@ -289,7 +289,7 @@ impl<T: Num + NumCast + PartialOrd + Copy> ControlPoints<T> {
         );
         let bound_right_bottom = Point::new(
             poset_max(right_top.x, right_bottom.x)? + cast!(4),
-            poset_min(left_bottom.y, right_bottom.y)? + cast!(4),
+            poset_max(left_bottom.y, right_bottom.y)? + cast!(4),
         );
 
         Some((bound_left_top, bound_right_bottom, *self - bound_left_top))
