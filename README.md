@@ -15,6 +15,11 @@ Ciyaify your image.
 ### Linux
 
 - Install OpenCV library. Make sure to install `-dev` packages if your distribution provides.
+
+> For Archlinux users:
+> 
+> There's a dependency issue on OpenCV 4.5.2. Install `vtk hdf5 glew` in addition to `opencv`.
+
 - ``` make all ```
 - Built binaries are located in `dist` directory.
 
