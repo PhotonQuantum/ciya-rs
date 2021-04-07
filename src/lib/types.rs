@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use std::convert::TryFrom;
 use std::ops::{Add, Div, Mul, Sub};
 
-use num::{Num, NumCast, Float};
+use num::{Float, Num, NumCast};
 
 #[macro_export]
 macro_rules! cast {
@@ -106,8 +106,14 @@ pub struct Rectangle<T: Num + NumCast + PartialOrd + Copy> {
 
 impl<T: Float> Rectangle<T> {
     pub fn is_irregular(&self) -> bool {
-        self.x.is_nan() || self.y.is_nan() || self.w.is_nan() || self.h.is_nan() ||
-            self.x.is_infinite() || self.y.is_infinite() || self.w.is_infinite() || self.h.is_infinite()
+        self.x.is_nan()
+            || self.y.is_nan()
+            || self.w.is_nan()
+            || self.h.is_nan()
+            || self.x.is_infinite()
+            || self.y.is_infinite()
+            || self.w.is_infinite()
+            || self.h.is_infinite()
     }
 }
 
@@ -140,7 +146,10 @@ pub struct ControlPoints<T: Num + NumCast + PartialOrd + Copy> {
 
 impl<T: Float> ControlPoints<T> {
     pub fn is_irregular(&self) -> bool {
-        self.p1.is_irregular() || self.p2.is_irregular() || self.p3.is_irregular() || self.p4.is_irregular()
+        self.p1.is_irregular()
+            || self.p2.is_irregular()
+            || self.p3.is_irregular()
+            || self.p4.is_irregular()
     }
 }
 
@@ -275,6 +284,7 @@ impl<T: Num + NumCast + PartialOrd + Copy> ControlPoints<T> {
             false
         })
     }
+    //noinspection RsBorrowChecker
     pub fn shift_origin(&self) -> Option<(Point<T>, Point<T>, Self)> {
         let cross = self.cross();
 
@@ -364,14 +374,13 @@ impl<T: Num + NumCast + PartialOrd + Copy> From<&ControlPoints<T>> for [(T, T); 
 }
 
 pub fn user_abs_minus<T: Num + NumCast + PartialOrd + Copy>(m: T, n: T) -> Option<T> {
-    m.partial_cmp(&n)
-        .map(|ord| {
-            if let Ordering::Less = ord {
-                n - m
-            } else {
-                m - n
-            }
-        })
+    m.partial_cmp(&n).map(|ord| {
+        if let Ordering::Less = ord {
+            n - m
+        } else {
+            m - n
+        }
+    })
 }
 
 pub fn poset_min<T: PartialOrd>(m: T, n: T) -> Option<T> {

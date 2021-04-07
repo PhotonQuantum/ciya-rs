@@ -49,9 +49,11 @@ impl<'a> WeebDetector<'a> {
 
 impl MouthDetectorTrait for WeebDetector<'_> {
     fn detect(&self, image: &DynamicImage) -> Result<ControlPoints<f32>> {
+        // convert rust image to matrix
         let image_mat = img_to_mat(image)?;
-        let mut cv_faces = VectorOfRect::new();
 
+        // detect face position using pretrained cascade classifier
+        let mut cv_faces = VectorOfRect::new();
         self.face_detector.borrow_mut().detect_multi_scale(
             &image_mat,
             &mut cv_faces,
@@ -65,9 +67,11 @@ impl MouthDetectorTrait for WeebDetector<'_> {
         let cv_faces = cv_faces.to_vec();
         (!cv_faces.is_empty())
             .then(|| -> Result<_> {
+                // find largest face and slightly enlarge roi
                 let cv_face = cv_faces.iter().max_by_key(|rect| rect.area()).unwrap();
                 let face_rect = face_to_roi(image_mat.size()?.width, cv_face);
 
+                // crop image and convert into matrix
                 let face = image
                     .crop_imm(face_rect.x, face_rect.y, face_rect.w, face_rect.h)
                     .resize_exact(128, 128, FilterType::Lanczos3)
@@ -76,15 +80,19 @@ impl MouthDetectorTrait for WeebDetector<'_> {
                     .permuted_axes([2, 0, 1])
                     .mapv(|i| i as f32);
 
+                // normalize matrix
                 let nn_input = face_to_nn_input(face_array);
 
+                // predict landmarks using pretrained model (onnxruntime)
                 let mut landmark_detector = self.landmark_detector.borrow_mut();
                 let nn_outputs: Vec<OrtOwnedTensor<f32, _>> =
                     landmark_detector.run(vec![nn_input])?;
 
+                // extract the latest stage
                 let nn_output = nn_outputs.into_iter().last().unwrap();
                 let heatmap = nn_output.index_axis(Axis(0), 0);
 
+                // find the most probable coords for mouth landmarks from heatmap
                 let landmarks: Vec<_> = heatmap
                     .axis_iter(Axis(0))
                     .dropping(20)
@@ -92,6 +100,8 @@ impl MouthDetectorTrait for WeebDetector<'_> {
                     .map(argmax)
                     .map(|(x, y)| Point::new(x as u32, y as u32))
                     .collect();
+
+                // rebase the coords
                 let base_landmarks: ControlPoints<f32> = landmarks
                     .iter()
                     .map(|point| rebase(*point, &Rectangle::new(0, 0, 128, 128), &face_rect))
@@ -99,6 +109,7 @@ impl MouthDetectorTrait for WeebDetector<'_> {
                     .collect::<Vec<_>>()
                     .try_into()
                     .unwrap();
+
                 Ok(base_landmarks)
             })
             .ok_or(Error::NoneError)

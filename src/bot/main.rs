@@ -94,57 +94,56 @@ async fn answer(cx: UpdateWithCx<AutoSend<Bot>, Message>, command: Command) -> R
             Opt::clap().write_long_help(&mut buf)?;
             cx.answer(String::from_utf8(buf)?).await?
         }
-        Command::Ciyaify(opt) => {
-            match opt {
-                Err(err) => cx.answer(format!("{:#}", err)).await?,
-                Ok(opt) => {
-                    let message = cx.update.reply_to_message();
-                    match message {
-                        None => {
-                            cx.answer("Please reply to the image you want to ciyaify.")
-                                .await?
-                        }
-                        Some(message) => {
-                            let file_id = image_from_message(message);
-                            match file_id {
-                                None => {
-                                    cx.answer("Please reply to the image you want to ciyaify.")
-                                        .await?
-                                }
-                                Some(file_id) => {
-                                    if opt.antialias_scale > 8 {
-                                        cx.answer("antialias_scale must <= 8.").await?
-                                    } else {
-                                        #[allow(unused_must_use)]
-                                            let _ = {
-                                            cx.requester
-                                                .send_chat_action(cx.chat_id(), ChatAction::Typing)
-                                                .await;
-                                        };
-
-                                        let mut file = tokio::fs::File::from_std(tempfile::tempfile()?);
+        Command::Ciyaify(opt) => match opt {
+            Err(err) => cx.answer(format!("{:#}", err)).await?,
+            Ok(opt) => {
+                let message = cx.update.reply_to_message();
+                match message {
+                    None => {
+                        cx.answer("Please reply to the image you want to ciyaify.")
+                            .await?
+                    }
+                    Some(message) => {
+                        let file_id = image_from_message(message);
+                        match file_id {
+                            None => {
+                                cx.answer("Please reply to the image you want to ciyaify.")
+                                    .await?
+                            }
+                            Some(file_id) => {
+                                if opt.antialias_scale > 8 {
+                                    cx.answer("antialias_scale must <= 8.").await?
+                                } else {
+                                    #[allow(unused_must_use)]
+                                    let _ = {
                                         cx.requester
-                                            .download_file(
-                                                &cx.requester.get_file(file_id).await?.file_path,
-                                                &mut file,
-                                            )
-                                            .await?;
-                                        file.seek(SeekFrom::Start(0)).await?;
-                                        let models = ensure_models();
-                                        match models {
-                                            None => cx.answer("Unable to load model.").await?,
-                                            Some((face_model, landmark_model)) => {
-                                                let mut bytes = Vec::with_capacity(
-                                                    file.metadata().await?.len() as usize,
-                                                );
-                                                file.read_to_end(&mut bytes).await?;
-                                                match decode_image(&*bytes) {
-                                                    Err(_) => {
-                                                        cx.answer("Invalid image format.").await?
-                                                    }
-                                                    Ok(image) => {
-                                                        let output = {
-                                                            let detector = match opt.mode {
+                                            .send_chat_action(cx.chat_id(), ChatAction::Typing)
+                                            .await;
+                                    };
+
+                                    let mut file = tokio::fs::File::from_std(tempfile::tempfile()?);
+                                    cx.requester
+                                        .download_file(
+                                            &cx.requester.get_file(file_id).await?.file_path,
+                                            &mut file,
+                                        )
+                                        .await?;
+                                    file.seek(SeekFrom::Start(0)).await?;
+                                    let models = ensure_models();
+                                    match models {
+                                        None => cx.answer("Unable to load model.").await?,
+                                        Some((face_model, landmark_model)) => {
+                                            let mut bytes = Vec::with_capacity(
+                                                file.metadata().await?.len() as usize,
+                                            );
+                                            file.read_to_end(&mut bytes).await?;
+                                            match decode_image(&*bytes) {
+                                                Err(_) => {
+                                                    cx.answer("Invalid image format.").await?
+                                                }
+                                                Ok(image) => {
+                                                    let output = {
+                                                        let detector = match opt.mode {
                                                                 Mode::Weeb => Box::new(WeebDetector::new(
                                                                     face_model.to_str().ok_or_else(|| {
                                                                         anyhow!("some path thing failed")
@@ -158,33 +157,32 @@ async fn answer(cx: UpdateWithCx<AutoSend<Bot>, Message>, command: Command) -> R
                                                                     return Ok(());
                                                                 }
                                                             };
-                                                            let ciyaify = Ciyafier::new(detector);
-                                                            ciyaify.ciya(
-                                                                image,
-                                                                opt.emotion.into(),
-                                                                opt.antialias_scale,
-                                                            )
-                                                        };
-                                                        match output {
-                                                            Err(Error::NoneError) => {
-                                                                cx.answer("No face or mouth detected.")
-                                                                    .await?
-                                                            }
-                                                            Err(err) => {
-                                                                cx.answer(format!("{}", err)).await?
-                                                            }
-                                                            Ok(output) => {
-                                                                let mut buf = Vec::new();
-                                                                output.write_to(
-                                                                    &mut buf,
-                                                                    image::ImageOutputFormat::Png,
-                                                                )?;
-                                                                cx.answer_photo(InputFile::Memory {
-                                                                    file_name: String::from("ciya.png"),
-                                                                    data: Cow::from(buf),
-                                                                })
-                                                                    .await?
-                                                            }
+                                                        let ciyaify = Ciyafier::new(detector);
+                                                        ciyaify.ciya(
+                                                            image,
+                                                            opt.emotion.into(),
+                                                            opt.antialias_scale,
+                                                        )
+                                                    };
+                                                    match output {
+                                                        Err(Error::NoneError) => {
+                                                            cx.answer("No face or mouth detected.")
+                                                                .await?
+                                                        }
+                                                        Err(err) => {
+                                                            cx.answer(format!("{}", err)).await?
+                                                        }
+                                                        Ok(output) => {
+                                                            let mut buf = Vec::new();
+                                                            output.write_to(
+                                                                &mut buf,
+                                                                image::ImageOutputFormat::Png,
+                                                            )?;
+                                                            cx.answer_photo(InputFile::Memory {
+                                                                file_name: String::from("ciya.png"),
+                                                                data: Cow::from(buf),
+                                                            })
+                                                            .await?
                                                         }
                                                     }
                                                 }
@@ -197,7 +195,7 @@ async fn answer(cx: UpdateWithCx<AutoSend<Bot>, Message>, command: Command) -> R
                     }
                 }
             }
-        }
+        },
     };
 
     Ok(())
