@@ -173,14 +173,11 @@ async fn answer(cx: UpdateWithCx<AutoSend<Bot>, Message>, command: Command) -> R
                                                             cx.answer(format!("{}", err)).await?
                                                         }
                                                         Ok(output) => {
-                                                            let mut buf = Vec::new();
-                                                            output.write_to(
-                                                                &mut buf,
-                                                                image::ImageOutputFormat::Png,
-                                                            )?;
-                                                            cx.answer_photo(InputFile::Memory {
-                                                                file_name: String::from("ciya.png"),
-                                                                data: Cow::from(buf),
+                                                            let encoder = webp::Encoder::from_image(&output);
+                                                            let bytes: Vec<u8> = (*encoder.encode(80.)).to_vec();
+                                                            cx.answer_document(InputFile::Memory {
+                                                                file_name: String::from("ciya.webp"),
+                                                                data: Cow::from(bytes),
                                                             })
                                                             .await?
                                                         }
