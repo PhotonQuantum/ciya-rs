@@ -15,11 +15,6 @@ Ciyaify your image.
 ### Linux
 
 - Install OpenCV library. Make sure to install `-dev` packages if your distribution provides.
-
-> For Archlinux users:
-> 
-> Install OpenCV 4.5.1, not the latest version which is unsupported.
-
 - ``` make all ```
 - Built binaries are located in `dist` directory.
 
