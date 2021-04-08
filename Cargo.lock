@@ -208,7 +208,6 @@ dependencies = [
  "shellwords",
  "structopt",
  "teloxide",
- "tempfile",
  "thiserror",
  "tokio",
  "webp",
