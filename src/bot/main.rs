@@ -4,7 +4,7 @@ extern crate ciya_lib;
 
 use std::borrow::Cow;
 use std::collections::HashMap;
-use std::io::{Cursor, SeekFrom};
+use std::io::Cursor;
 
 use anyhow::{anyhow, Result};
 use image::io::Reader as ImageReader;
@@ -13,7 +13,6 @@ use structopt::StructOpt;
 use teloxide::net::Download;
 use teloxide::prelude::*;
 use teloxide::types::{ChatAction, InputFile, Message, PhotoSize};
-use tokio::io::{AsyncReadExt, AsyncSeekExt};
 
 use ciya_lib::ciyafier::Ciyafier;
 use ciya_lib::detectors::WeebDetector;
@@ -121,23 +120,18 @@ async fn answer(cx: UpdateWithCx<AutoSend<Bot>, Message>, command: Command) -> R
                                             .await;
                                     };
 
-                                    let mut file = tokio::fs::File::from_std(tempfile::tempfile()?);
+                                    let mut buffer = Vec::new();
                                     cx.requester
                                         .download_file(
                                             &cx.requester.get_file(file_id).await?.file_path,
-                                            &mut file,
+                                            &mut buffer,
                                         )
                                         .await?;
-                                    file.seek(SeekFrom::Start(0)).await?;
                                     let models = ensure_models();
                                     match models {
                                         None => cx.answer("Unable to load model.").await?,
                                         Some((face_model, landmark_model)) => {
-                                            let mut bytes = Vec::with_capacity(
-                                                file.metadata().await?.len() as usize,
-                                            );
-                                            file.read_to_end(&mut bytes).await?;
-                                            match decode_image(&*bytes) {
+                                            match decode_image(&*buffer) {
                                                 Err(_) => {
                                                     cx.answer("Invalid image format.").await?
                                                 }
@@ -173,10 +167,14 @@ async fn answer(cx: UpdateWithCx<AutoSend<Bot>, Message>, command: Command) -> R
                                                             cx.answer(format!("{}", err)).await?
                                                         }
                                                         Ok(output) => {
-                                                            let encoder = webp::Encoder::from_image(&output);
-                                                            let bytes: Vec<u8> = (*encoder.encode(80.)).to_vec();
+                                                            let encoder =
+                                                                webp::Encoder::from_image(&output);
+                                                            let bytes: Vec<u8> =
+                                                                (*encoder.encode(80.)).to_vec();
                                                             cx.answer_document(InputFile::Memory {
-                                                                file_name: String::from("ciya.webp"),
+                                                                file_name: String::from(
+                                                                    "ciya.webp",
+                                                                ),
                                                                 data: Cow::from(bytes),
                                                             })
                                                             .await?
