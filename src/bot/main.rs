@@ -1,5 +1,3 @@
-#![feature(map_into_keys_values)]
-
 extern crate ciya_lib;
 
 use std::borrow::Cow;
@@ -138,19 +136,19 @@ async fn answer(cx: UpdateWithCx<AutoSend<Bot>, Message>, command: Command) -> R
                                                 Ok(image) => {
                                                     let output = {
                                                         let detector = match opt.mode {
-                                                                Mode::Weeb => Box::new(WeebDetector::new(
-                                                                    face_model.to_str().ok_or_else(|| {
-                                                                        anyhow!("some path thing failed")
-                                                                    })?,
-                                                                    landmark_model.to_str().ok_or_else(|| {
-                                                                        anyhow!("some path thing failed")
-                                                                    })?,
-                                                                )?),
-                                                                Mode::Standard => {
-                                                                    cx.answer("Standard detector not implemented.").await?;
-                                                                    return Ok(());
-                                                                }
-                                                            };
+                                                            Mode::Weeb => Box::new(WeebDetector::new(
+                                                                face_model.to_str().ok_or_else(|| {
+                                                                    anyhow!("some path thing failed")
+                                                                })?,
+                                                                landmark_model.to_str().ok_or_else(|| {
+                                                                    anyhow!("some path thing failed")
+                                                                })?,
+                                                            )?),
+                                                            Mode::Standard => {
+                                                                cx.answer("Standard detector not implemented.").await?;
+                                                                return Ok(());
+                                                            }
+                                                        };
                                                         let ciyaify = Ciyafier::new(detector);
                                                         ciyaify.ciya(
                                                             image,

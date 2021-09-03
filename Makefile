@@ -1,7 +1,7 @@
 RUSTFLAGS = "-C link-arg=-Wl,-rpath,libs "
-ONNXRUNTIME_NAME = onnxruntime-linux-x64-1.6.0
-ONNXRUNTIME_URL = "https://github.com/microsoft/onnxruntime/releases/download/v1.6.0/${ONNXRUNTIME_NAME}.tgz"
-ONNXRUNTIME_SO_PATH = lib/libonnxruntime.so.1.6.0
+ONNXRUNTIME_NAME = onnxruntime-linux-x64-1.8.1
+ONNXRUNTIME_URL = "https://github.com/microsoft/onnxruntime/releases/download/v1.8.1/${ONNXRUNTIME_NAME}.tgz"
+ONNXRUNTIME_SO_PATH = lib/libonnxruntime.so.1.8.1
 
 all: cli bot copy-ort
 

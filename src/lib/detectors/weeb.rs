@@ -2,13 +2,13 @@ use std::cell::RefCell;
 use std::cmp::{max, min, Ordering};
 use std::convert::TryInto;
 
-use image::imageops::FilterType;
 use image::DynamicImage;
+use image::imageops::FilterType;
 use itertools::Itertools;
 use lazy_static::lazy_static;
-use ndarray::parallel::prelude::*;
 use ndarray::{Array, ArrayBase, Axis, Ix3, Ix4, OwnedRepr, RemoveAxis, ViewRepr};
-use ndarray_image::{NdColor, NdImage};
+use ndarray::parallel::prelude::*;
+use nshare::ToNdarray3;
 use num::{Num, NumCast};
 use onnxruntime::environment::Environment;
 use onnxruntime::session::Session;
@@ -76,9 +76,7 @@ impl MouthDetectorTrait for WeebDetector<'_> {
                     .crop_imm(face_rect.x, face_rect.y, face_rect.w, face_rect.h)
                     .resize_exact(128, 128, FilterType::Lanczos3)
                     .into_rgb8();
-                let face_array = Into::<NdColor>::into(NdImage(&face))
-                    .permuted_axes([2, 0, 1])
-                    .mapv(|i| i as f32);
+                let face_array = face.into_ndarray3().mapv(|i| i as f32);
 
                 // normalize matrix
                 let nn_input = face_to_nn_input(face_array);
@@ -113,7 +111,7 @@ impl MouthDetectorTrait for WeebDetector<'_> {
                 Ok(base_landmarks)
             })
             .ok_or(Error::NoneError)
-            .flatten()
+            .and_then(|x| x)    // .flatten() is gated by `result_flattening`
     }
 }
 
@@ -125,15 +123,15 @@ fn rebase<T: Num + NumCast + PartialOrd + Copy>(
     Point {
         x: to.x
             + (num::cast(
-                (num::cast::<_, f32>(coord.x).unwrap()) * (num::cast::<_, f32>(to.w).unwrap())
-                    / (num::cast::<_, f32>(from.w).unwrap()),
-            )
+            (num::cast::<_, f32>(coord.x).unwrap()) * (num::cast::<_, f32>(to.w).unwrap())
+                / (num::cast::<_, f32>(from.w).unwrap()),
+        )
             .unwrap()),
         y: to.y
             + (num::cast(
-                (num::cast::<_, f32>(coord.y).unwrap()) * (num::cast::<_, f32>(to.h).unwrap())
-                    / (num::cast::<_, f32>(from.h).unwrap()),
-            )
+            (num::cast::<_, f32>(coord.y).unwrap()) * (num::cast::<_, f32>(to.h).unwrap())
+                / (num::cast::<_, f32>(from.h).unwrap()),
+        )
             .unwrap()),
     }
 }

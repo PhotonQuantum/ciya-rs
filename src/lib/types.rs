@@ -276,13 +276,7 @@ impl<T: Num + NumCast + PartialOrd + Copy> ControlPoints<T> {
     #[allow(clippy::match_like_matches_macro)]
     pub fn is_convex(&self) -> Option<bool> {
         let Point { x: _, y: y0 } = self.cross();
-        Some(if let Ordering::Greater = y0.partial_cmp(&self.p2.y)? {
-            true
-        } else if let Ordering::Less = y0.partial_cmp(&self.p4.y)? {
-            true
-        } else {
-            false
-        })
+        Some(y0.partial_cmp(&self.p2.y)?.is_gt() || y0.partial_cmp(&self.p4.y)?.is_lt())
     }
     //noinspection RsBorrowChecker
     pub fn shift_origin(&self) -> Option<(Point<T>, Point<T>, Self)> {

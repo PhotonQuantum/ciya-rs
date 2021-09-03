@@ -21,23 +21,23 @@ path = "src/bot/main.rs"
 [dependencies]
 image = "0.23"
 imageproc = "0.22"
-ndarray = { version = "0.13", features = ["rayon"] }
-ndarray-image = "0.2"
-num = "0.3"
-opencv = "0.52"
-onnxruntime = "0.0.11"
+ndarray = { version = "0.15", features = ["rayon"] }
+nshare = {version="0.6", features=["ndarray", "image"]}
+num = "0.4"
+opencv = "0.54"
+onnxruntime = "0.0.14"
 itertools = "0.10"
 thiserror = "1.0"
 anyhow = "1.0"
-lazy_static = "1.1"
+lazy_static = "1.4"
 dirs = "3.0"
 structopt = "0.3"
 clap = "2.33"
-reqwest = {version="0.11.0", features=["blocking"]}
-teloxide = { version = "0.4", features = ["auto-send", "macros"] }
-log = "0.4.8"
-pretty_env_logger = "0.4.0"
-tokio = { version =  "1.3", features = ["rt-multi-thread", "macros"] }
+reqwest = { version = "0.11", features = ["blocking"] }
+teloxide = { version = "0.5.2", features = ["auto-send", "macros"] }
+log = "0.4.14"
+pretty_env_logger = "0.4"
+tokio = { version = "1.10", features = ["rt-multi-thread", "macros"] }
 mime = "0.3"
 webp = "0.1"
 shellwords = "1.1"
