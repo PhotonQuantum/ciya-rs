@@ -22,22 +22,22 @@ path = "src/bot/main.rs"
 image = "0.23"
 imageproc = "0.22"
 ndarray = { version = "0.15", features = ["rayon"] }
-nshare = {version="0.6", features=["ndarray", "image"]}
+nshare = {version= "0.6", features=["ndarray", "image"]}
 num = "0.4"
-opencv = "0.54"
+opencv = "0.55"
 onnxruntime = "0.0.14"
 itertools = "0.10"
 thiserror = "1.0"
 anyhow = "1.0"
 lazy_static = "1.4"
-dirs = "3.0"
+dirs = "4.0"
 structopt = "0.3"
 clap = "2.33"
 reqwest = { version = "0.11", features = ["blocking"] }
 teloxide = { version = "0.5.2", features = ["auto-send", "macros"] }
-log = "0.4.14"
+log = "0.4"
 pretty_env_logger = "0.4"
 tokio = { version = "1.10", features = ["rt-multi-thread", "macros"] }
 mime = "0.3"
-webp = "0.1"
+webp = "0.2"
 shellwords = "1.1"

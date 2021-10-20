@@ -71,7 +71,7 @@ fn decode_image(bytes: &[u8]) -> Result<DynamicImage> {
         Ok(decoder
             .decode()
             .ok_or_else(|| anyhow!("some decode thing failed"))?
-            .as_image())
+            .to_image())
     } else {
         Ok(guessed_image.decode()?)
     }
@@ -166,7 +166,7 @@ async fn answer(cx: UpdateWithCx<AutoSend<Bot>, Message>, command: Command) -> R
                                                         }
                                                         Ok(output) => {
                                                             let encoder =
-                                                                webp::Encoder::from_image(&output);
+                                                                webp::Encoder::from_image(&output).unwrap();
                                                             let bytes: Vec<u8> =
                                                                 (*encoder.encode(80.)).to_vec();
                                                             cx.answer_document(InputFile::Memory {
