@@ -23,6 +23,10 @@ jobs:
           components: rustfmt, clippy
           toolchain: stable
           default: true
+      - name: Install OpenCV
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install libopencv-dev
       - uses: Swatinem/rust-cache@v1
       - uses: actions-rs/cargo@v1
         name: Check Code Format 🔧
@@ -47,6 +51,10 @@ jobs:
           profile: minimal
           toolchain: stable
           default: true
+      - name: Install OpenCV
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install libopencv-dev
       - uses: Swatinem/rust-cache@v1
       - uses: actions-rs/cargo@v1
         name: Running Tests 🚀
