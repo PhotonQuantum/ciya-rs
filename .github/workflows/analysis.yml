@@ -16,8 +16,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get -y install libopencv-dev
-          sudo apt-get -y install llvm
+          sudo apt-get -y install libopencv-dev llvm libclang-dev
       - uses: actions-rs/toolchain@v1
         name: Setup Cargo Toolchain 🛎️
         with:
