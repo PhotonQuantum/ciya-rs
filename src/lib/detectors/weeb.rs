@@ -2,12 +2,12 @@ use std::cell::RefCell;
 use std::cmp::{max, min, Ordering};
 use std::convert::TryInto;
 
-use image::DynamicImage;
 use image::imageops::FilterType;
+use image::DynamicImage;
 use itertools::Itertools;
 use lazy_static::lazy_static;
-use ndarray::{Array, ArrayBase, Axis, Ix3, Ix4, OwnedRepr, RemoveAxis, ViewRepr};
 use ndarray::parallel::prelude::*;
+use ndarray::{Array, ArrayBase, Axis, Ix3, Ix4, OwnedRepr, RemoveAxis, ViewRepr};
 use nshare::ToNdarray3;
 use num::{Num, NumCast};
 use onnxruntime::environment::Environment;
@@ -111,7 +111,7 @@ impl MouthDetectorTrait for WeebDetector<'_> {
                 Ok(base_landmarks)
             })
             .ok_or(Error::NoneError)
-            .and_then(|x| x)    // .flatten() is gated by `result_flattening`
+            .and_then(|x| x) // .flatten() is gated by `result_flattening`
     }
 }
 
@@ -123,15 +123,15 @@ fn rebase<T: Num + NumCast + PartialOrd + Copy>(
     Point {
         x: to.x
             + (num::cast(
-            (num::cast::<_, f32>(coord.x).unwrap()) * (num::cast::<_, f32>(to.w).unwrap())
-                / (num::cast::<_, f32>(from.w).unwrap()),
-        )
+                (num::cast::<_, f32>(coord.x).unwrap()) * (num::cast::<_, f32>(to.w).unwrap())
+                    / (num::cast::<_, f32>(from.w).unwrap()),
+            )
             .unwrap()),
         y: to.y
             + (num::cast(
-            (num::cast::<_, f32>(coord.y).unwrap()) * (num::cast::<_, f32>(to.h).unwrap())
-                / (num::cast::<_, f32>(from.h).unwrap()),
-        )
+                (num::cast::<_, f32>(coord.y).unwrap()) * (num::cast::<_, f32>(to.h).unwrap())
+                    / (num::cast::<_, f32>(from.h).unwrap()),
+            )
             .unwrap()),
     }
 }

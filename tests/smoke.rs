@@ -2,8 +2,8 @@ use std::fs::File;
 use std::io::{Cursor, Write};
 use std::path::{Path, PathBuf};
 
-use image::ImageFormat;
 use image::io::Reader as ImageReader;
+use image::ImageFormat;
 use reqwest::blocking::Client;
 use tempfile::tempdir;
 
@@ -27,10 +27,10 @@ fn smoke_test() {
         .unwrap(),
     );
     let ciyafier = Ciyafier::new(detector);
-    let image = ImageReader::with_format(Cursor::new(TEST_IMAGE), ImageFormat::Png).decode().unwrap();
-    let _image = ciyafier
-        .ciya(image, Emotion::Auto, 8)
+    let image = ImageReader::with_format(Cursor::new(TEST_IMAGE), ImageFormat::Png)
+        .decode()
         .unwrap();
+    let _image = ciyafier.ciya(image, Emotion::Auto, 8).unwrap();
 }
 
 fn ensure_models() -> (PathBuf, PathBuf) {

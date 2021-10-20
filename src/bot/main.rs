@@ -166,7 +166,8 @@ async fn answer(cx: UpdateWithCx<AutoSend<Bot>, Message>, command: Command) -> R
                                                         }
                                                         Ok(output) => {
                                                             let encoder =
-                                                                webp::Encoder::from_image(&output).unwrap();
+                                                                webp::Encoder::from_image(&output)
+                                                                    .unwrap();
                                                             let bytes: Vec<u8> =
                                                                 (*encoder.encode(80.)).to_vec();
                                                             cx.answer_document(InputFile::Memory {
