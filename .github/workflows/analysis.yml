@@ -13,6 +13,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         name: Checkout 🛎️
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install libopencv-dev
+          sudo apt-get -y install llvm
       - uses: actions-rs/toolchain@v1
         name: Setup Cargo Toolchain 🛎️
         with:

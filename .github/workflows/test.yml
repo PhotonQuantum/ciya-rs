@@ -17,16 +17,17 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         name: Checkout 🛎️
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install libopencv-dev
+          sudo apt-get -y install llvm
       - uses: actions-rs/toolchain@v1
         name: Setup Cargo Toolchain 🛎️
         with:
           components: rustfmt, clippy
           toolchain: stable
           default: true
-      - name: Install OpenCV
-        run: |
-          sudo apt-get update
-          sudo apt-get -y install libopencv-dev
       - uses: Swatinem/rust-cache@v1
       - uses: actions-rs/cargo@v1
         name: Check Code Format 🔧
@@ -45,16 +46,17 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         name: Checkout 🛎️
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install libopencv-dev
+          sudo apt-get -y install llvm
       - uses: actions-rs/toolchain@v1
         name: Setup Cargo Toolchain 🛎️
         with:
           profile: minimal
           toolchain: stable
           default: true
-      - name: Install OpenCV
-        run: |
-          sudo apt-get update
-          sudo apt-get -y install libopencv-dev
       - uses: Swatinem/rust-cache@v1
       - uses: actions-rs/cargo@v1
         name: Running Tests 🚀
