@@ -13,7 +13,7 @@ cli: download-ort
 
 bot: download-ort
 	mkdir -p dist
-	OPENCV_MODULE_WHITELIST=${OPENCV_MODULES} ORT_STRATEGY=system ORT_LIB_LOCATION=_build/${ONNXRUNTIME_NAME}/ RUSTFLAGS=${RUSTFLAGS} cargo build --bin ciya_bot --release
+	OPENCV_MODULE_WHITELIST=${OPENCV_MODULES} ORT_STRATEGY=system ORT_LIB_LOCATION=_build/${ONNXRUNTIME_NAME}/ RUSTFLAGS=${RUSTFLAGS} cargo build --bin ciya_bot --features webhook --release
 	cp target/release/ciya_bot dist/
 
 download-ort:

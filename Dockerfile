@@ -36,4 +36,6 @@ COPY --from=builder ./work/dist/ciya_bot ./
 
 COPY --from=builder ./work/dist/libs/* /usr/lib/
 
+EXPOSE 8080
+
 CMD ["./ciya_bot"]
