@@ -8,8 +8,8 @@ pub type Result<T> = result::Result<T, Error>;
 pub enum Error {
     #[error("cv error: {0}")]
     CVError(#[from] opencv::Error),
-    #[error("onnxruntime error: {0}")]
-    OrtError(#[from] onnxruntime::OrtError),
+    #[error("tract error: {0}")]
+    TractError(#[from] tract_onnx::tract_core::TractError),
     #[error("image error: {0}")]
     ImageError(#[from] image::ImageError),
     #[error("io error: {0}")]

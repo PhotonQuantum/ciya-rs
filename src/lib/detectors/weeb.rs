@@ -5,49 +5,43 @@ use std::convert::TryInto;
 use image::imageops::FilterType;
 use image::DynamicImage;
 use itertools::Itertools;
-use lazy_static::lazy_static;
 use ndarray::parallel::prelude::*;
 use ndarray::{Array, ArrayBase, Axis, Ix3, Ix4, OwnedRepr, RemoveAxis, ViewRepr};
 use nshare::ToNdarray3;
 use num::{Num, NumCast};
-use onnxruntime::environment::Environment;
-use onnxruntime::session::Session;
-use onnxruntime::tensor::OrtOwnedTensor;
 use opencv::core::{Rect, Size};
 use opencv::objdetect::{CascadeClassifier, CascadeClassifierTrait};
 use opencv::prelude::*;
 use opencv::types::VectorOfRect;
+use tract_onnx::prelude::*;
 
 use crate::convert::img_to_mat;
 use crate::detectors::MouthDetectorTrait;
 use crate::errors::{Error, Result};
 use crate::types::*;
 
-lazy_static! {
-    static ref ENV: Environment = Environment::builder()
-        .with_name("anime_landmark_detector")
-        .build()
-        .unwrap();
-}
-
-pub struct WeebDetector<'a> {
+pub struct WeebDetector {
     face_detector: RefCell<CascadeClassifier>,
-    landmark_detector: RefCell<onnxruntime::session::Session<'a>>,
+    landmark_detector: TractModelType,
 }
 
-impl<'a> WeebDetector<'a> {
+type TractModelType = RunnableModel<TypedFact, Box<dyn TypedOp>, Graph<TypedFact, Box<dyn TypedOp>>>;
+
+impl WeebDetector {
     pub fn new(face_model: &str, landmark_model: &str) -> Result<Self> {
-        let session: Session = ENV
-            .new_session_builder()?
-            .with_model_from_file(landmark_model.to_string())?;
+        let landmark_detector = tract_onnx::onnx()
+            .model_for_path(landmark_model)?
+            .with_input_fact(0, InferenceFact::dt_shape(f32::datum_type(), tvec!(1, 3, 128, 128)))?
+            .into_optimized()?
+            .into_runnable()?;
         Ok(Self {
             face_detector: RefCell::new(CascadeClassifier::new(face_model).unwrap()),
-            landmark_detector: RefCell::new(session),
+            landmark_detector
         })
     }
 }
 
-impl MouthDetectorTrait for WeebDetector<'_> {
+impl MouthDetectorTrait for WeebDetector {
     fn detect(&self, image: &DynamicImage) -> Result<ControlPoints<f32>> {
         // convert rust image to matrix
         let image_mat = img_to_mat(image)?;
@@ -81,14 +75,13 @@ impl MouthDetectorTrait for WeebDetector<'_> {
                 // normalize matrix
                 let nn_input = face_to_nn_input(face_array);
 
-                // predict landmarks using pretrained model (onnxruntime)
-                let mut landmark_detector = self.landmark_detector.borrow_mut();
-                let nn_outputs: Vec<OrtOwnedTensor<f32, _>> =
-                    landmark_detector.run(vec![nn_input])?;
+                // predict landmarks using pretrained model (onnx)
+                let nn_outputs = self.landmark_detector.run(tvec![Tensor::from(nn_input)])?;
 
                 // extract the latest stage
-                let nn_output = nn_outputs.into_iter().last().unwrap();
+                let nn_output = nn_outputs.last().unwrap().to_array_view::<f32>().unwrap();
                 let heatmap = nn_output.index_axis(Axis(0), 0);
+                println!("heatmap shape: {:?}", heatmap.shape());
 
                 // find the most probable coords for mouth landmarks from heatmap
                 let landmarks: Vec<_> = heatmap
@@ -98,6 +91,8 @@ impl MouthDetectorTrait for WeebDetector<'_> {
                     .map(argmax)
                     .map(|(x, y)| Point::new(x as u32, y as u32))
                     .collect();
+
+                println!("landmarks: {:?}", landmarks);
 
                 // rebase the coords
                 let base_landmarks: ControlPoints<f32> = landmarks
