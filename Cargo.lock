@@ -207,7 +207,6 @@ name = "ciya-rs"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "axum",
  "clap",
  "dirs",
  "image",
@@ -223,15 +222,13 @@ dependencies = [
  "opencv",
  "pretty_env_logger",
  "reqwest",
- "serde_json",
  "shellwords",
  "structopt",
  "teloxide",
+ "teloxide-listener",
  "tempfile",
  "thiserror",
  "tokio",
- "tokio-stream",
- "url",
  "webp",
 ]
 
@@ -2163,6 +2160,20 @@ dependencies = [
  "tokio-util",
  "url",
  "uuid",
+]
+
+[[package]]
+name = "teloxide-listener"
+version = "0.1.0"
+source = "git+https://github.com/PhotonQuantum/teloxide-listener#f46af63e79784dc85f8fa7e2768d8d068d3bb376"
+dependencies = [
+ "axum",
+ "futures-core",
+ "serde_json",
+ "teloxide",
+ "tokio",
+ "tokio-stream",
+ "url",
 ]
 
 [[package]]

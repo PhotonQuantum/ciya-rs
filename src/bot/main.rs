@@ -11,17 +11,16 @@ use structopt::StructOpt;
 use teloxide::net::Download;
 use teloxide::prelude::*;
 use teloxide::types::{ChatAction, InputFile, Message, PhotoSize};
+use teloxide_listener::Listener;
 
 use ciya_lib::ciyafier::Ciyafier;
 use ciya_lib::detectors::WeebDetector;
 use ciya_lib::errors::Error;
 
 use crate::commands::{Command, Mode, Opt};
-use crate::listener::Listener;
 use crate::resources::ensure_models;
 
 mod commands;
-mod listener;
 mod resources;
 
 fn best_photos(photos: &[PhotoSize]) -> Vec<&PhotoSize> {
@@ -206,18 +205,6 @@ async fn main() {
 
     let bot_name: String = "ciyaify_bot".to_string();
 
-    let listener = Listener::from_env();
-    match listener {
-        Listener::Polling => teloxide::commands_repl(bot, bot_name, answer).await,
-        #[cfg(feature = "webhook")]
-        Listener::Webhook(_) => {
-            teloxide::commands_repl_with_listener(
-                bot.clone(),
-                bot_name,
-                answer,
-                listener.try_into_webhook(bot).await,
-            )
-            .await
-        }
-    }
+    let listener = Listener::from_env().build(bot.clone()).await;
+    teloxide::commands_repl_with_listener(bot, bot_name, answer, listener).await;
 }
