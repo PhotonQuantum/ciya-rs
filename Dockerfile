@@ -4,7 +4,9 @@ WORKDIR /work
 
 RUN apt-get -y update
 
-RUN apt-get -y install libopencv-dev llvm libclang-dev
+RUN apt-get -y install llvm libclang-dev
+
+RUN apt-get -y install libopencv-dev
 
 RUN apt-get -y install libssl-dev ca-certificates
 

@@ -34,7 +34,7 @@ ndarray = { version = "0.15", features = ["rayon"] }
 nshare = { version = "0.6", features = ["ndarray", "image"] }
 num = "0.4"
 onnxruntime = "0.0.14"
-opencv = "0.58"
+opencv = { version = "0.59", features = ["objdetect"], default-features = false }
 pretty_env_logger = "0.4"
 reqwest = { version = "0.11", features = ["blocking"] }
 shellwords = "1.1"
