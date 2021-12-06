@@ -2,15 +2,7 @@ FROM rust:slim-bullseye AS builder
 
 WORKDIR /work
 
-RUN apt-get -y update
-
-RUN apt-get -y install llvm libclang-dev
-
-RUN apt-get -y install libopencv-dev
-
-RUN apt-get -y install libssl-dev ca-certificates
-
-RUN apt-get -y install make wget clang
+RUN apt-get update && apt-get -y install llvm libclang-dev libopencv-dev make wget clang && rm -rf /var/lib/apt/lists/*
 
 COPY src ./src
 
@@ -28,11 +20,7 @@ FROM debian:bullseye-slim
 
 WORKDIR /work
 
-RUN apt-get -y update
-
-RUN apt-get -y install libopencv-core4.5 libopencv-objdetect4.5
-
-RUN apt-get -y install ca-certificates
+RUN apt-get update && apt-get -y install libopencv-core4.5 libopencv-objdetect4.5 && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder ./work/dist/ciya_bot ./
 
