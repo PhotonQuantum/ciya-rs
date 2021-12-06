@@ -36,10 +36,10 @@ num = "0.4"
 onnxruntime = "0.0.14"
 opencv = { version = "0.61", features = ["objdetect"], default-features = false }
 pretty_env_logger = "0.4"
-reqwest = { version = "0.11", features = ["blocking"] }
+reqwest = { version = "0.11", default-features = false, features = ["blocking", "rustls-tls"] }
 shellwords = "1.1"
 structopt = "0.3"
-teloxide = { version = "0.5.3", features = ["auto-send", "macros"] }
+teloxide = { version = "0.5", default-features = false, features = ["ctrlc_handler", "rustls", "auto-send", "macros"] }
 thiserror = "1.0"
 tokio = { version = "1.14", features = ["rt-multi-thread", "macros"] }
 webp = "0.2"
