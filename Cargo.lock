@@ -226,7 +226,7 @@ dependencies = [
  "anyhow",
  "clap",
  "dirs",
- "image",
+ "image 0.23.14",
  "imageproc",
  "itertools 0.10.3",
  "lazy_static",
@@ -865,13 +865,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "image"
+version = "0.24.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e94ac3d41f882c624a82d7945952032388488681f45f9d4077999a6c85688d61"
+dependencies = [
+ "bytemuck",
+ "byteorder",
+ "color_quant",
+ "num-iter",
+ "num-rational 0.4.0",
+ "num-traits",
+]
+
+[[package]]
 name = "imageproc"
 version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7923654f3ce7cb6849d5dc9e544aaeab49c508a90b56c721b046e7234c74ab53"
 dependencies = [
  "conv",
- "image",
+ "image 0.23.14",
  "itertools 0.9.0",
  "num 0.3.1",
  "rand",
@@ -971,9 +985,9 @@ checksum = "f98a04dce437184842841303488f70d0188c5f51437d2a834dc097eafa909a01"
 
 [[package]]
 name = "libwebp-sys"
-version = "0.2.0"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3e70c064738b35a28fd6f991d27c0d9680353641d167ae3702a8228dd8272ef6"
+checksum = "439fd1885aa28937e7edcd68d2e793cb4a22f8733460d2519fbafd2b215672bf"
 dependencies = [
  "cc",
 ]
@@ -1145,7 +1159,7 @@ version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "26d6fa84a18ab554105785b5a8e599a146db56acd9a862d4d71a1f6dada433d7"
 dependencies = [
- "image",
+ "image 0.23.14",
  "ndarray",
 ]
 
@@ -2497,11 +2511,11 @@ dependencies = [
 
 [[package]]
 name = "webp"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0041a9fcbdbf6402c3cb0ec7c2c1a1c240efd523519a0763ae07753bc95f7713"
+checksum = "3f80f6a431ea17cbe9d6958628e553c17d22df62b301b39940a9dfd60f3dd7c6"
 dependencies = [
- "image",
+ "image 0.24.0",
  "libwebp-sys",
 ]
 
