@@ -22,7 +22,7 @@ path = "src/bot/main.rs"
 
 [dependencies]
 anyhow = "1.0"
-clap = "2.34"
+clap = "3.1"
 dirs = "4.0"
 image = "0.23"
 imageproc = "0.22"
