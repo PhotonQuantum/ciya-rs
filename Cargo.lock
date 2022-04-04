@@ -51,6 +51,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4361135be9122e0870de935d7c439aef945b9f9ddd4199a553b5270b49c82a27"
 
 [[package]]
+name = "aquamarine"
+version = "0.1.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96e14cb2a51c8b45d26a4219981985c7350fc05eacb7b5b2939bceb2ffefdf3e"
+dependencies = [
+ "itertools 0.9.0",
+ "proc-macro-error",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "async-trait"
 version = "0.1.51"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -241,7 +254,7 @@ dependencies = [
  "reqwest",
  "shellwords",
  "structopt",
- "teloxide",
+ "teloxide 0.7.3",
  "teloxide-listener",
  "tempfile",
  "thiserror",
@@ -512,6 +525,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "erasable"
+version = "1.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5f11890ce181d47a64e5d1eb4b6caba0e7bae911a356723740d058a5d0340b7d"
+dependencies = [
+ "autocfg",
+ "scopeguard",
+]
+
+[[package]]
 name = "fastrand"
 version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -732,6 +755,12 @@ checksum = "6d621efb26863f0e9924c6ac577e8275e5e6b77455db64ffa6c65c904e9e132c"
 dependencies = [
  "unicode-segmentation",
 ]
+
+[[package]]
+name = "heck"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2540771e65fc8cb83cd6e8a237f70c319bd5c29f78ed1084ba5d50eeac86f7f9"
 
 [[package]]
 name = "hermit-abi"
@@ -1615,6 +1644,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "rc-box"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e0690759eabf094030c2cdabc25ade1395bac02210d920d655053c1d49583fd8"
+dependencies = [
+ "erasable",
+]
+
+[[package]]
 name = "redox_syscall"
 version = "0.1.57"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1941,7 +1979,7 @@ version = "0.4.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dcb5ae327f9cc13b68763b5749770cb9e048a99bd9dfdfa58d0cf05d5f64afe0"
 dependencies = [
- "heck",
+ "heck 0.3.3",
  "proc-macro-error",
  "proc-macro2",
  "quote",
@@ -1964,6 +2002,18 @@ name = "sync_wrapper"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "20518fe4a4c9acf048008599e464deb21beeae3d3578418951a189c235a7a9a8"
+
+[[package]]
+name = "take_mut"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f764005d11ee5f36500a149ace24e00e3da98b0158b3e2d53a7495660d3f4d60"
+
+[[package]]
+name = "takecell"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "20f34339676cdcab560c9a82300c4c2581f68b9369aedf0fae86f2ff9565ff3e"
 
 [[package]]
 name = "tar"
@@ -1993,7 +2043,32 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with_macros",
- "teloxide-core",
+ "teloxide-core 0.3.4",
+ "thiserror",
+ "tokio",
+ "tokio-stream",
+ "tokio-util",
+]
+
+[[package]]
+name = "teloxide"
+version = "0.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5e0471ee22325fa9d4d0574afb21104c28466dbd02495dbd5fef2d431c58c7a5"
+dependencies = [
+ "aquamarine",
+ "async-trait",
+ "bytes",
+ "derive_more",
+ "flurry",
+ "futures",
+ "log",
+ "mime",
+ "pin-project",
+ "serde",
+ "serde_json",
+ "serde_with_macros",
+ "teloxide-core 0.4.5",
  "teloxide-macros",
  "thiserror",
  "tokio",
@@ -2029,6 +2104,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "teloxide-core"
+version = "0.4.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dc4d7ef8a6e39097e49a2481169fa9fc0ff627d8321a7ab52cf6d5ac47850fff"
+dependencies = [
+ "bitflags",
+ "bytes",
+ "chrono",
+ "derive_more",
+ "either",
+ "futures",
+ "log",
+ "mime",
+ "never",
+ "once_cell",
+ "pin-project",
+ "rc-box",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "serde_with_macros",
+ "take_mut",
+ "takecell",
+ "thiserror",
+ "tokio",
+ "tokio-util",
+ "url",
+ "uuid",
+]
+
+[[package]]
 name = "teloxide-listener"
 version = "0.1.0"
 source = "git+https://github.com/PhotonQuantum/teloxide-listener#b08925e7d1c3817661fad5c3818ac9f550ac3eac"
@@ -2036,7 +2142,7 @@ dependencies = [
  "axum",
  "futures-core",
  "serde_json",
- "teloxide",
+ "teloxide 0.5.3",
  "tokio",
  "tokio-stream",
  "url",
@@ -2044,10 +2150,11 @@ dependencies = [
 
 [[package]]
 name = "teloxide-macros"
-version = "0.4.1"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2fb7e97b8bef2231aea6643558147c7f9c112675c4ca49f24d8fac2edff1216d"
+checksum = "7d08322f107110dc4aadf5683bf19df9340eebc567529def2d17c830de198a58"
 dependencies = [
+ "heck 0.4.0",
  "proc-macro2",
  "quote",
  "syn",
