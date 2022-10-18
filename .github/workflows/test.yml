@@ -20,7 +20,7 @@ jobs:
           sudo apt-get update
           sudo apt-get -y install libopencv-dev llvm libclang-dev
       - name: Setup Cargo Toolchain 🛎️
-        run: rustup show
+        run: rustup show && rustup install nightly
       - uses: Swatinem/rust-cache@v2
       - name: Check Code Format 🔧
         run: cargo +nightly fmt -- --check
