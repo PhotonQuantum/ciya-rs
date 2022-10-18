@@ -1,14 +1,20 @@
 use std::io::Cursor;
 
-use image::imageops::{self, FilterType};
-use image::io::Reader as ImageReader;
-use image::{DynamicImage, ImageFormat, Rgba, RgbaImage};
+use image::{
+    imageops::{self, FilterType},
+    io::Reader as ImageReader,
+    DynamicImage,
+    ImageFormat,
+    Rgba,
+    RgbaImage,
+};
 use imageproc::geometric_transformations::{Interpolation, Projection};
-use num::traits::Pow;
-use num::{Num, NumCast};
+use num::{traits::Pow, Num, NumCast};
 
-use crate::errors::{Error, Result};
-use crate::types::*;
+use crate::{
+    errors::{Error, Result},
+    types::{user_abs_minus, ControlPoints, Point, Rectangle},
+};
 
 const CIYA_RAW: &[u8] = include_bytes!("../../resources/ciya.png");
 
@@ -67,17 +73,10 @@ impl Projector {
 
         let upscale_projection = Projection::scale(antialias_scale as f32, antialias_scale as f32);
         // calculate projection over ciya and overlay position in the target image
-        let (offset, canvas_size, projection) = if !control_points
+        let (offset, canvas_size, projection) = if control_points
             .is_convex()
             .ok_or_else(|| Error::MathError(String::from("invalid control points")))?
         {
-            // if ctrl_pts forms a concave quadrilateral, use the naive projection
-            self.calc_ctrl_pts(control_points, ProjectionStrategy::Naive)
-                .and_then(|(from, to)| proj_from_ctrl_pts(from, to))
-                .ok_or_else(|| {
-                    Error::MathError(String::from("unable to compute projection matrix"))
-                })
-        } else {
             // try to respect to detected mouth edges
             self.calc_ctrl_pts(control_points, ProjectionStrategy::RespectEdge { smile })
                 .and_then(|(from, to)| proj_from_ctrl_pts(from, to))
@@ -86,6 +85,13 @@ impl Projector {
                     self.calc_ctrl_pts(control_points, ProjectionStrategy::Naive)
                         .and_then(|(from, to)| proj_from_ctrl_pts(from, to))
                 })
+                .ok_or_else(|| {
+                    Error::MathError(String::from("unable to compute projection matrix"))
+                })
+        } else {
+            // if ctrl_pts forms a concave quadrilateral, use the naive projection
+            self.calc_ctrl_pts(control_points, ProjectionStrategy::Naive)
+                .and_then(|(from, to)| proj_from_ctrl_pts(from, to))
                 .ok_or_else(|| {
                     Error::MathError(String::from("unable to compute projection matrix"))
                 })
@@ -114,13 +120,13 @@ impl Projector {
         );
 
         // downscale to target size
-        let warped_ciya = image::imageops::resize(
+        let warped_ciya = imageops::resize(
             &warped_ciya,
             scaled_size.x,
             scaled_size.y,
             FilterType::Lanczos3,
         );
-        image::imageops::overlay(&mut image, &warped_ciya, offset.x as u32, offset.y as u32);
+        imageops::overlay(&mut image, &warped_ciya, offset.x as i64, offset.y as i64);
         Ok(image)
     }
 

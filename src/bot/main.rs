@@ -1,24 +1,23 @@
 extern crate ciya_lib;
 
-use std::borrow::Cow;
-use std::collections::HashMap;
-use std::io::Cursor;
+use std::{collections::HashMap, io::Cursor};
 
 use anyhow::{anyhow, Result};
-use image::io::Reader as ImageReader;
-use image::{DynamicImage, GenericImageView, ImageFormat};
-use structopt::StructOpt;
-use teloxide::net::Download;
-use teloxide::prelude::*;
-use teloxide::types::{ChatAction, InputFile, Message, PhotoSize};
-use teloxide_listener::Listener;
+use ciya_lib::{ciyafier::Ciyafier, detectors::WeebDetector, errors::Error};
+use clap::CommandFactory;
+use image::{io::Reader as ImageReader, DynamicImage, ImageFormat};
+use log::{info, warn};
+use teloxide::{
+    net::Download,
+    prelude::*,
+    types::{ChatAction, InputFile, Message, PhotoSize},
+    utils::command::BotCommands,
+};
 
-use ciya_lib::ciyafier::Ciyafier;
-use ciya_lib::detectors::WeebDetector;
-use ciya_lib::errors::Error;
-
-use crate::commands::{Command, Mode, Opt};
-use crate::resources::ensure_models;
+use crate::{
+    commands::{Commands, Mode, Opt},
+    resources::ensure_models,
+};
 
 mod commands;
 mod resources;
@@ -26,12 +25,13 @@ mod resources;
 fn best_photos(photos: &[PhotoSize]) -> Vec<&PhotoSize> {
     let mut unique_photos: HashMap<&str, &PhotoSize> = HashMap::new();
     for photo in photos {
-        if let Some(photo_in_map) = unique_photos.get(photo.file_unique_id.as_str()) {
+        let id = photo.file.unique_id.as_str();
+        if let Some(photo_in_map) = unique_photos.get(id) {
             if photo.height > photo_in_map.height {
-                unique_photos.insert(photo.file_unique_id.as_str(), photo);
+                unique_photos.insert(id, photo);
             }
         } else {
-            unique_photos.insert(photo.file_unique_id.as_str(), photo);
+            unique_photos.insert(id, photo);
         }
     }
     unique_photos.into_values().collect()
@@ -41,9 +41,9 @@ fn image_from_message(message: &Message) -> Option<&str> {
     message
         .document()
         .and_then(|doc| {
-            doc.mime_type.as_ref().and_then(|_mime| {
-                if _mime.type_() == mime::IMAGE {
-                    Some(doc.file_id.as_str())
+            doc.mime_type.as_ref().and_then(|mime| {
+                if mime.type_() == mime::IMAGE {
+                    Some(doc.file.id.as_str())
                 } else {
                     None
                 }
@@ -52,22 +52,18 @@ fn image_from_message(message: &Message) -> Option<&str> {
         .or_else(|| {
             message
                 .photo()
-                .and_then(|photos| Some(best_photos(photos).into_iter().next()?.file_id.as_str()))
+                .and_then(|photos| Some(best_photos(photos).first()?.file.id.as_str()))
         })
         .or_else(|| {
-            message.sticker().and_then(|sticker| {
-                if !sticker.is_animated {
-                    Some(sticker.file_id.as_str())
-                } else {
-                    None
-                }
-            })
+            message
+                .sticker()
+                .and_then(|sticker| (!sticker.is_animated()).then_some(sticker.file.id.as_str()))
         })
 }
 
 fn decode_image(bytes: &[u8]) -> Result<DynamicImage> {
     let guessed_image = ImageReader::new(Cursor::new(bytes)).with_guessed_format()?;
-    if let Some(ImageFormat::WebP) = guessed_image.format() {
+    if guessed_image.format() == Some(ImageFormat::WebP) {
         let decoder = webp::Decoder::new(bytes);
         Ok(decoder
             .decode()
@@ -85,68 +81,95 @@ fn decode_image(bytes: &[u8]) -> Result<DynamicImage> {
     })
 }
 
-async fn answer(cx: UpdateWithCx<AutoSend<Bot>, Message>, command: Command) -> Result<()> {
+async fn answer(bot: Bot, msg: Message, command: Commands) -> ResponseResult<()> {
     match command {
-        Command::Help | Command::Start => {
-            let mut buf: Vec<u8> = Vec::new();
-            Opt::clap().write_long_help(&mut buf)?;
-            cx.answer(String::from_utf8(buf)?).await?
+        Commands::Help | Commands::Start => {
+            bot.send_message(msg.chat.id, Opt::command().render_long_help().to_string())
+                .await?
         }
-        Command::Ciyaify(opt) => match opt {
-            Err(err) => cx.answer(format!("{:#}", err)).await?,
+        Commands::Ciyaify(opt) => match opt {
+            Err(err) => bot.send_message(msg.chat.id, err.to_string()).await?,
             Ok(opt) => {
-                let message = cx.update.reply_to_message();
+                let message = msg.reply_to_message();
                 match message {
                     None => {
-                        cx.answer("Please reply to the image you want to ciyaify.")
-                            .await?
+                        bot.send_message(
+                            msg.chat.id,
+                            "Please reply to the image you want to ciyaify.",
+                        )
+                        .await?
                     }
                     Some(message) => {
                         let file_id = image_from_message(message);
                         match file_id {
                             None => {
-                                cx.answer("Please reply to the image you want to ciyaify.")
-                                    .await?
+                                bot.send_message(
+                                    msg.chat.id,
+                                    "Please reply to the image you want to ciyaify.",
+                                )
+                                .await?
                             }
                             Some(file_id) => {
                                 if opt.antialias_scale > 8 {
-                                    cx.answer("antialias_scale must <= 8.").await?
+                                    bot.send_message(msg.chat.id, "antialias_scale must <= 8.")
+                                        .await?
                                 } else {
                                     #[allow(unused_must_use)]
-                                    let _ = {
-                                        cx.requester
-                                            .send_chat_action(cx.chat_id(), ChatAction::Typing)
-                                            .await;
+                                    {
+                                        bot.send_chat_action(msg.chat.id, ChatAction::Typing).await;
                                     };
 
                                     let mut buffer = Vec::new();
-                                    cx.requester
-                                        .download_file(
-                                            &cx.requester.get_file(file_id).await?.file_path,
-                                            &mut buffer,
-                                        )
-                                        .await?;
+                                    bot.download_file(
+                                        &bot.get_file(file_id).await?.path,
+                                        &mut buffer,
+                                    )
+                                    .await?;
+                                    info!("Downloading model");
                                     let models = ensure_models();
+                                    info!("Model downloaded");
                                     match models {
-                                        None => cx.answer("Unable to load model.").await?,
+                                        None => {
+                                            bot.send_message(msg.chat.id, "Unable to load model.")
+                                                .await?
+                                        }
                                         Some((face_model, landmark_model)) => {
-                                            match decode_image(&*buffer) {
+                                            match decode_image(&buffer) {
                                                 Err(_) => {
-                                                    cx.answer("Invalid image format.").await?
+                                                    bot.send_message(
+                                                        msg.chat.id,
+                                                        "Invalid image format.",
+                                                    )
+                                                    .await?
                                                 }
                                                 Ok(image) => {
                                                     let output = {
                                                         let detector = match opt.mode {
-                                                            Mode::Weeb => Box::new(WeebDetector::new(
-                                                                face_model.to_str().ok_or_else(|| {
-                                                                    anyhow!("some path thing failed")
-                                                                })?,
-                                                                landmark_model.to_str().ok_or_else(|| {
-                                                                    anyhow!("some path thing failed")
-                                                                })?,
-                                                            )?),
+                                                            Mode::Weeb => Box::new(
+                                                                match WeebDetector::new(
+                                                                    face_model.to_str().unwrap(),
+                                                                    landmark_model
+                                                                        .to_str()
+                                                                        .unwrap(),
+                                                                ) {
+                                                                    Ok(detector) => detector,
+                                                                    Err(e) => {
+                                                                        warn!(
+                                                                            "Unable to load \
+                                                                             model: {}",
+                                                                            e
+                                                                        );
+                                                                        return Ok(());
+                                                                    }
+                                                                },
+                                                            ),
                                                             Mode::Standard => {
-                                                                cx.answer("Standard detector not implemented.").await?;
+                                                                bot.send_message(
+                                                                    msg.chat.id,
+                                                                    "Standard detector not \
+                                                                     implemented.",
+                                                                )
+                                                                .await?;
                                                                 return Ok(());
                                                             }
                                                         };
@@ -159,11 +182,18 @@ async fn answer(cx: UpdateWithCx<AutoSend<Bot>, Message>, command: Command) -> R
                                                     };
                                                     match output {
                                                         Err(Error::NoneError) => {
-                                                            cx.answer("No face or mouth detected.")
-                                                                .await?
+                                                            bot.send_message(
+                                                                msg.chat.id,
+                                                                "No face or mouth detected.",
+                                                            )
+                                                            .await?
                                                         }
                                                         Err(err) => {
-                                                            cx.answer(format!("{}", err)).await?
+                                                            bot.send_message(
+                                                                msg.chat.id,
+                                                                format!("{}", err),
+                                                            )
+                                                            .await?
                                                         }
                                                         Ok(output) => {
                                                             let encoder =
@@ -171,12 +201,11 @@ async fn answer(cx: UpdateWithCx<AutoSend<Bot>, Message>, command: Command) -> R
                                                                     .unwrap();
                                                             let bytes: Vec<u8> =
                                                                 (*encoder.encode(80.)).to_vec();
-                                                            cx.answer_document(InputFile::Memory {
-                                                                file_name: String::from(
-                                                                    "ciya.webp",
-                                                                ),
-                                                                data: Cow::from(bytes),
-                                                            })
+                                                            bot.send_document(
+                                                                msg.chat.id,
+                                                                InputFile::memory(bytes)
+                                                                    .file_name("ciya.webp"),
+                                                            )
                                                             .await?
                                                         }
                                                     }
@@ -198,13 +227,10 @@ async fn answer(cx: UpdateWithCx<AutoSend<Bot>, Message>, command: Command) -> R
 
 #[tokio::main]
 async fn main() {
-    teloxide::enable_logging!();
-    log::info!("Starting ciya_bot...");
+    pretty_env_logger::init();
+    info!("Starting ciya_bot...");
 
-    let bot = Bot::from_env().auto_send();
+    let bot = Bot::from_env();
 
-    let bot_name: String = "ciyaify_bot".to_string();
-
-    let listener = Listener::from_env().build(bot.clone()).await;
-    teloxide::commands_repl_with_listener(bot, bot_name, answer, listener).await;
+    teloxide::commands_repl(bot, answer, Commands::ty()).await;
 }

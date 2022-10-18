@@ -9,7 +9,7 @@ pub enum Error {
     #[error("cv error: {0}")]
     CVError(#[from] opencv::Error),
     #[error("onnxruntime error: {0}")]
-    OrtError(#[from] onnxruntime::OrtError),
+    OrtError(#[from] mcai_onnxruntime::OrtError),
     #[error("image error: {0}")]
     ImageError(#[from] image::ImageError),
     #[error("io error: {0}")]

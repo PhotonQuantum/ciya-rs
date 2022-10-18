@@ -1,7 +1,9 @@
-use std::fs::File;
-use std::io::Write;
-use std::path::{Path, PathBuf};
-use std::sync::Once;
+use std::{
+    fs::File,
+    io::Write,
+    path::{Path, PathBuf},
+    sync::Once,
+};
 
 use anyhow::{anyhow, Result};
 use reqwest::blocking::Client;
@@ -44,13 +46,13 @@ fn _ensure_models() -> Result<(PathBuf, PathBuf)> {
             let face_model = http.get(FACE_MODEL_URL).send()?;
             ensure_dir(download_path.0.parent().unwrap())?;
             let mut file = File::create(&download_path.0)?;
-            file.write_all(&*face_model.bytes()?)?;
+            file.write_all(&face_model.bytes()?)?;
         }
         if !(download_path.1.is_file()) {
             let landmark_model = http.get(LANDMARK_MODEL_URL).send()?;
             ensure_dir(download_path.1.parent().unwrap())?;
             let mut file = File::create(&download_path.1)?;
-            file.write_all(&*landmark_model.bytes()?)?;
+            file.write_all(&landmark_model.bytes()?)?;
         }
         Ok(download_path)
     }

@@ -1,27 +1,44 @@
-use std::cell::RefCell;
-use std::cmp::{max, min, Ordering};
-use std::convert::TryInto;
+use std::{
+    cell::RefCell,
+    cmp::{max, min, Ordering},
+    convert::TryInto,
+};
 
-use image::imageops::FilterType;
-use image::DynamicImage;
+use image::{imageops, imageops::FilterType, DynamicImage};
 use itertools::Itertools;
 use lazy_static::lazy_static;
-use ndarray::parallel::prelude::*;
-use ndarray::{Array, ArrayBase, Axis, Ix3, Ix4, OwnedRepr, RemoveAxis, ViewRepr};
+use mcai_onnxruntime::{
+    environment::Environment,
+    session::Session,
+    tensor::{FromArray, InputTensor, OrtOwnedTensor},
+};
+use ndarray::{
+    parallel::prelude::*,
+    Array,
+    ArrayBase,
+    Axis,
+    Ix3,
+    Ix4,
+    OwnedRepr,
+    RemoveAxis,
+    ViewRepr,
+};
 use nshare::ToNdarray3;
 use num::{Num, NumCast};
-use onnxruntime::environment::Environment;
-use onnxruntime::session::Session;
-use onnxruntime::tensor::OrtOwnedTensor;
-use opencv::core::{Rect, Size};
-use opencv::objdetect::{CascadeClassifier, CascadeClassifierTrait};
-use opencv::prelude::*;
-use opencv::types::VectorOfRect;
+use opencv::{
+    core::{Rect, Size},
+    objdetect::{CascadeClassifier, CascadeClassifierTrait},
+    prelude::*,
+    types::VectorOfRect,
+};
+use tap::Pipe;
 
-use crate::convert::img_to_mat;
-use crate::detectors::MouthDetectorTrait;
-use crate::errors::{Error, Result};
-use crate::types::*;
+use crate::{
+    convert::img_to_mat,
+    detectors::MouthDetectorTrait,
+    errors::{Error, Result},
+    types::{ControlPoints, Point, Rectangle},
+};
 
 lazy_static! {
     static ref ENV: Environment = Environment::builder()
@@ -32,11 +49,12 @@ lazy_static! {
 
 pub struct WeebDetector<'a> {
     face_detector: RefCell<CascadeClassifier>,
-    landmark_detector: RefCell<onnxruntime::session::Session<'a>>,
+    landmark_detector: RefCell<Session<'a>>,
 }
 
 impl<'a> WeebDetector<'a> {
     pub fn new(face_model: &str, landmark_model: &str) -> Result<Self> {
+        #[allow(clippy::unnecessary_to_owned)]
         let session: Session = ENV
             .new_session_builder()?
             .with_model_from_file(landmark_model.to_string())?;
@@ -49,6 +67,14 @@ impl<'a> WeebDetector<'a> {
 
 impl MouthDetectorTrait for WeebDetector<'_> {
     fn detect(&self, image: &DynamicImage) -> Result<ControlPoints<f32>> {
+        let buffer;
+        #[allow(clippy::option_if_let_else)]
+        let image = if let Some(image) = image.as_rgb8() {
+            image
+        } else {
+            buffer = image.to_rgb8();
+            &buffer
+        };
         // convert rust image to matrix
         let image_mat = img_to_mat(image)?;
 
@@ -73,18 +99,20 @@ impl MouthDetectorTrait for WeebDetector<'_> {
 
                 // crop image and convert into matrix
                 let face = image
-                    .crop_imm(face_rect.x, face_rect.y, face_rect.w, face_rect.h)
-                    .resize_exact(128, 128, FilterType::Lanczos3)
-                    .into_rgb8();
+                    .pipe(|img| {
+                        imageops::crop_imm(img, face_rect.x, face_rect.y, face_rect.w, face_rect.h)
+                    })
+                    .pipe(|img| imageops::resize(&*img, 128, 128, FilterType::Lanczos3));
                 let face_array = face.into_ndarray3().mapv(|i| i as f32);
 
                 // normalize matrix
                 let nn_input = face_to_nn_input(face_array);
+                let input_tensor = InputTensor::from_array(nn_input);
 
                 // predict landmarks using pretrained model (onnxruntime)
                 let mut landmark_detector = self.landmark_detector.borrow_mut();
                 let nn_outputs: Vec<OrtOwnedTensor<f32, _>> =
-                    landmark_detector.run(vec![nn_input])?;
+                    landmark_detector.run(vec![input_tensor])?;
 
                 // extract the latest stage
                 let nn_output = nn_outputs.into_iter().last().unwrap();
@@ -95,7 +123,7 @@ impl MouthDetectorTrait for WeebDetector<'_> {
                     .axis_iter(Axis(0))
                     .dropping(20)
                     .take(4)
-                    .map(argmax)
+                    .map(|x| argmax(&x))
                     .map(|(x, y)| Point::new(x as u32, y as u32))
                     .collect();
 
@@ -136,7 +164,7 @@ fn rebase<T: Num + NumCast + PartialOrd + Copy>(
     }
 }
 
-fn argmax<T: RemoveAxis>(array: ArrayBase<ViewRepr<&f32>, T>) -> (usize, usize) {
+fn argmax<T: RemoveAxis>(array: &ArrayBase<ViewRepr<&f32>, T>) -> (usize, usize) {
     array
         .axis_iter(Axis(0))
         .into_par_iter()

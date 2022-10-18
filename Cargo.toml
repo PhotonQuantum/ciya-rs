@@ -4,9 +4,6 @@ version = "0.1.0"
 authors = ["PhotonQuantum <self@lightquantum.me>"]
 edition = "2018"
 
-[features]
-webhook = ["teloxide-listener/webhook"]
-
 [lib]
 name = "ciya_lib"
 path = "src/lib/lib.rs"
@@ -22,28 +19,27 @@ path = "src/bot/main.rs"
 
 [dependencies]
 anyhow = "1.0"
-clap = "2.34"
+clap = { version = "4.0", features = ["derive"] }
 dirs = "4.0"
-image = "0.23"
-imageproc = "0.22"
+tap = "1.0"
+image = "0.24"
+imageproc = "0.23"
 itertools = "0.10"
 lazy_static = "1.4"
 log = "0.4"
 mime = "0.3"
 ndarray = { version = "0.15", features = ["rayon"] }
-nshare = { version = "0.6", features = ["ndarray", "image"] }
+nshare = { version = "0.9", features = ["ndarray", "image"] }
 num = "0.4"
-onnxruntime = "0.0.14"
-opencv = { version = "0.63", features = ["objdetect"], default-features = false }
+mcai-onnxruntime = "0.0.15"
+opencv = { version = "0.70", features = ["objdetect", "imgproc"], default-features = false }
 pretty_env_logger = "0.4"
 reqwest = { version = "0.11", default-features = false, features = ["blocking", "rustls-tls"] }
 shellwords = "1.1"
-structopt = "0.3"
-teloxide = { version = "0.5", default-features = false, features = ["ctrlc_handler", "rustls", "auto-send", "macros"] }
+teloxide = { version = "0.11", default-features = false, features = ["ctrlc_handler", "rustls", "auto-send", "macros"] }
 thiserror = "1.0"
 tokio = { version = "1.15", features = ["rt-multi-thread", "macros"] }
 webp = "0.2"
-teloxide-listener = { git = "https://github.com/PhotonQuantum/teloxide-listener" }
 
 [dev-dependencies]
 tempfile = "3.3"

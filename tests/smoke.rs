@@ -1,14 +1,16 @@
-use std::fs::File;
-use std::io::{Cursor, Write};
-use std::path::{Path, PathBuf};
+use std::{
+    fs::File,
+    io::{Cursor, Write},
+    path::{Path, PathBuf},
+};
 
-use image::io::Reader as ImageReader;
-use image::ImageFormat;
+use ciya_lib::{
+    ciyafier::{Ciyafier, Emotion},
+    detectors::WeebDetector,
+};
+use image::{io::Reader as ImageReader, ImageFormat};
 use reqwest::blocking::Client;
 use tempfile::tempdir;
-
-use ciya_lib::ciyafier::{Ciyafier, Emotion};
-use ciya_lib::detectors::WeebDetector;
 
 const TEST_IMAGE: &[u8] = include_bytes!("test.png");
 
@@ -45,21 +47,21 @@ fn ensure_models() -> (PathBuf, PathBuf) {
         let face_model = http.get(FACE_MODEL_URL).send().unwrap();
         ensure_dir(download_path.0.parent().unwrap());
         let mut file = File::create(&download_path.0).unwrap();
-        file.write_all(&*face_model.bytes().unwrap()).unwrap();
+        file.write_all(&face_model.bytes().unwrap()).unwrap();
     }
     if !(download_path.1.is_file()) {
         let landmark_model = http.get(LANDMARK_MODEL_URL).send().unwrap();
         ensure_dir(download_path.1.parent().unwrap());
         let mut file = File::create(&download_path.1).unwrap();
-        file.write_all(&*landmark_model.bytes().unwrap()).unwrap();
+        file.write_all(&landmark_model.bytes().unwrap()).unwrap();
     }
     download_path
 }
 
 fn ensure_dir(path: &Path) {
     if path.is_file() {
-        panic!("Is a file")
+        panic!("Is a file");
     } else if !path.exists() {
-        std::fs::create_dir_all(path).unwrap()
+        std::fs::create_dir_all(path).unwrap();
     }
 }

@@ -1,9 +1,7 @@
 use image::DynamicImage;
 
-use crate::detectors::MouthDetectorTrait;
-use crate::errors::Result;
 pub use crate::projector::Emotion;
-use crate::projector::Projector;
+use crate::{detectors::MouthDetectorTrait, errors::Result, projector::Projector};
 
 pub struct Ciyafier {
     detector: Box<dyn MouthDetectorTrait>,
@@ -11,12 +9,14 @@ pub struct Ciyafier {
 }
 
 impl Ciyafier {
+    #[must_use]
     pub fn new(detector: Box<dyn MouthDetectorTrait>) -> Self {
         Self {
             detector,
             projector: Projector::new(),
         }
     }
+
     pub fn ciya(
         &self,
         image: DynamicImage,

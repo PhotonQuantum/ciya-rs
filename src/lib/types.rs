@@ -1,12 +1,14 @@
-use std::cmp::Ordering;
-use std::convert::TryFrom;
-use std::ops::{Add, Div, Mul, Sub};
+use std::{
+    cmp::Ordering,
+    convert::TryFrom,
+    ops::{Add, Div, Mul, Sub},
+};
 
 use num::{Float, Num, NumCast};
 
 #[macro_export]
 macro_rules! cast {
-    ($num: expr) => {
+    ($num:expr) => {
         num::cast($num).unwrap()
     };
 }
@@ -24,7 +26,7 @@ impl<T: Float> Point<T> {
 }
 
 impl<T: Num + NumCast + PartialOrd + Copy> Add for Point<T> {
-    type Output = Point<T>;
+    type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
         Self {
@@ -35,7 +37,7 @@ impl<T: Num + NumCast + PartialOrd + Copy> Add for Point<T> {
 }
 
 impl<T: Num + NumCast + PartialOrd + Copy> Sub for Point<T> {
-    type Output = Point<T>;
+    type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
         Self {
@@ -46,7 +48,7 @@ impl<T: Num + NumCast + PartialOrd + Copy> Sub for Point<T> {
 }
 
 impl<T: Num + NumCast + PartialOrd + Copy> Mul<T> for Point<T> {
-    type Output = Point<T>;
+    type Output = Self;
 
     fn mul(self, rhs: T) -> Self::Output {
         Self {
@@ -57,7 +59,7 @@ impl<T: Num + NumCast + PartialOrd + Copy> Mul<T> for Point<T> {
 }
 
 impl<T: Num + NumCast + PartialOrd + Copy> Div<T> for Point<T> {
-    type Output = Point<T>;
+    type Output = Self;
 
     fn div(self, rhs: T) -> Self::Output {
         Self {
@@ -68,7 +70,7 @@ impl<T: Num + NumCast + PartialOrd + Copy> Div<T> for Point<T> {
 }
 
 impl<T: Num + NumCast + PartialOrd + Copy> Point<T> {
-    pub fn new(x: T, y: T) -> Self {
+    pub const fn new(x: T, y: T) -> Self {
         Self { x, y }
     }
 }
@@ -118,8 +120,8 @@ impl<T: Float> Rectangle<T> {
 }
 
 impl<T: Num + NumCast + PartialOrd + Copy> Rectangle<T> {
-    pub fn new(x: T, y: T, w: T, h: T) -> Self {
-        Rectangle { x, y, w, h }
+    pub const fn new(x: T, y: T, w: T, h: T) -> Self {
+        Self { x, y, w, h }
     }
 }
 
@@ -154,7 +156,7 @@ impl<T: Float> ControlPoints<T> {
 }
 
 impl<T: Num + NumCast + PartialOrd + Copy> Add<Point<T>> for ControlPoints<T> {
-    type Output = ControlPoints<T>;
+    type Output = Self;
 
     fn add(self, rhs: Point<T>) -> Self::Output {
         Self {
@@ -167,7 +169,7 @@ impl<T: Num + NumCast + PartialOrd + Copy> Add<Point<T>> for ControlPoints<T> {
 }
 
 impl<T: Num + NumCast + PartialOrd + Copy> Sub<Point<T>> for ControlPoints<T> {
-    type Output = ControlPoints<T>;
+    type Output = Self;
 
     fn sub(self, rhs: Point<T>) -> Self::Output {
         Self {
@@ -180,7 +182,7 @@ impl<T: Num + NumCast + PartialOrd + Copy> Sub<Point<T>> for ControlPoints<T> {
 }
 
 impl<T: Num + NumCast + PartialOrd + Copy> Mul<T> for ControlPoints<T> {
-    type Output = ControlPoints<T>;
+    type Output = Self;
 
     fn mul(self, rhs: T) -> Self::Output {
         Self {
@@ -193,7 +195,7 @@ impl<T: Num + NumCast + PartialOrd + Copy> Mul<T> for ControlPoints<T> {
 }
 
 impl<T: Num + NumCast + PartialOrd + Copy> Div<T> for ControlPoints<T> {
-    type Output = ControlPoints<T>;
+    type Output = Self;
 
     fn div(self, rhs: T) -> Self::Output {
         Self {
@@ -205,10 +207,10 @@ impl<T: Num + NumCast + PartialOrd + Copy> Div<T> for ControlPoints<T> {
     }
 }
 
-impl<T: Num + NumCast + PartialOrd + Copy> Add<ControlPoints<T>> for ControlPoints<T> {
-    type Output = ControlPoints<T>;
+impl<T: Num + NumCast + PartialOrd + Copy> Add<Self> for ControlPoints<T> {
+    type Output = Self;
 
-    fn add(self, rhs: ControlPoints<T>) -> Self::Output {
+    fn add(self, rhs: Self) -> Self::Output {
         Self {
             p1: self.p1 + rhs.p1,
             p2: self.p2 + rhs.p2,
@@ -218,10 +220,10 @@ impl<T: Num + NumCast + PartialOrd + Copy> Add<ControlPoints<T>> for ControlPoin
     }
 }
 
-impl<T: Num + NumCast + PartialOrd + Copy> Sub<ControlPoints<T>> for ControlPoints<T> {
-    type Output = ControlPoints<T>;
+impl<T: Num + NumCast + PartialOrd + Copy> Sub<Self> for ControlPoints<T> {
+    type Output = Self;
 
-    fn sub(self, rhs: ControlPoints<T>) -> Self::Output {
+    fn sub(self, rhs: Self) -> Self::Output {
         Self {
             p1: self.p1 - rhs.p1,
             p2: self.p2 - rhs.p2,
@@ -232,9 +234,10 @@ impl<T: Num + NumCast + PartialOrd + Copy> Sub<ControlPoints<T>> for ControlPoin
 }
 
 impl<T: Num + NumCast + PartialOrd + Copy> ControlPoints<T> {
-    pub fn new(p1: Point<T>, p2: Point<T>, p3: Point<T>, p4: Point<T>) -> Self {
-        ControlPoints { p1, p2, p3, p4 }
+    pub const fn new(p1: Point<T>, p2: Point<T>, p3: Point<T>, p4: Point<T>) -> Self {
+        Self { p1, p2, p3, p4 }
     }
+
     pub fn cross(&self) -> Point<T> {
         let [(x1, y1), (x3, y3), (x2, y2), (x4, y4)]: [(T, T); 4] = self.into();
         let x1_2 = x1 - x2;
@@ -247,12 +250,14 @@ impl<T: Num + NumCast + PartialOrd + Copy> ControlPoints<T> {
             (y3_4 * (y2 * x1 - y1 * x2) - y1_2 * (y4 * x3 - y3 * x4)) / (y3_4 * x1_2 - y1_2 * x3_4);
         Point::new(x0, y0)
     }
+
     pub fn center(&self) -> Point<T> {
         let x_0 = (self.p1.x + self.p3.x) / cast!(2);
         let y_0 = (self.p2.y + self.p4.y) / cast!(2);
 
         Point::new(x_0, y_0)
     }
+
     pub fn enlarge(&self, scale: T, use_center: bool) -> Self {
         let origin = if use_center {
             self.center()
@@ -262,6 +267,7 @@ impl<T: Num + NumCast + PartialOrd + Copy> ControlPoints<T> {
 
         *self + (*self) * scale - origin * scale
     }
+
     pub fn centralize_y(&self) -> Self {
         let cross = self.cross();
         let center = self.center();
@@ -273,12 +279,14 @@ impl<T: Num + NumCast + PartialOrd + Copy> ControlPoints<T> {
             p4: self.p4,
         }
     }
+
     #[allow(clippy::match_like_matches_macro)]
     pub fn is_convex(&self) -> Option<bool> {
         let Point { x: _, y: y0 } = self.cross();
         Some(y0.partial_cmp(&self.p2.y)?.is_gt() || y0.partial_cmp(&self.p4.y)?.is_lt())
     }
-    //noinspection RsBorrowChecker
+
+    // noinspection RsBorrowChecker
     pub fn shift_origin(&self) -> Option<(Point<T>, Point<T>, Self)> {
         let cross = self.cross();
 
@@ -300,6 +308,7 @@ impl<T: Num + NumCast + PartialOrd + Copy> ControlPoints<T> {
     }
 }
 
+#[allow(clippy::fallible_impl_from)]
 impl<T: Num + NumCast + PartialOrd + Copy> From<&Rectangle<T>> for ControlPoints<T> {
     fn from(rect: &Rectangle<T>) -> Self {
         Self {
@@ -340,10 +349,10 @@ impl<T: Num + NumCast + PartialOrd + Copy> TryFrom<&Vec<Point<T>>> for ControlPo
     type Error = ();
 
     fn try_from(value: &Vec<Point<T>>) -> Result<Self, Self::Error> {
-        if value.len() != 4 {
-            Err(())
+        if value.len() == 4 {
+            Ok(Self::new(value[0], value[1], value[2], value[3]))
         } else {
-            Ok(ControlPoints::new(value[0], value[1], value[2], value[3]))
+            Err(())
         }
     }
 }
@@ -352,10 +361,10 @@ impl<T: Num + NumCast + PartialOrd + Copy> TryFrom<Vec<Point<T>>> for ControlPoi
     type Error = ();
 
     fn try_from(value: Vec<Point<T>>) -> Result<Self, Self::Error> {
-        if value.len() != 4 {
-            Err(())
+        if value.len() == 4 {
+            Ok(Self::new(value[0], value[1], value[2], value[3]))
         } else {
-            Ok(ControlPoints::new(value[0], value[1], value[2], value[3]))
+            Err(())
         }
     }
 }
@@ -368,21 +377,16 @@ impl<T: Num + NumCast + PartialOrd + Copy> From<&ControlPoints<T>> for [(T, T); 
 }
 
 pub fn user_abs_minus<T: Num + NumCast + PartialOrd + Copy>(m: T, n: T) -> Option<T> {
-    m.partial_cmp(&n).map(|ord| {
-        if let Ordering::Less = ord {
-            n - m
-        } else {
-            m - n
-        }
-    })
+    m.partial_cmp(&n)
+        .map(|ord| if ord == Ordering::Less { n - m } else { m - n })
 }
 
 pub fn poset_min<T: PartialOrd>(m: T, n: T) -> Option<T> {
     m.partial_cmp(&n)
-        .map(|ord| if let Ordering::Less = ord { m } else { n })
+        .map(|ord| if ord == Ordering::Less { m } else { n })
 }
 
 pub fn poset_max<T: PartialOrd>(m: T, n: T) -> Option<T> {
     m.partial_cmp(&n)
-        .map(|ord| if let Ordering::Greater = ord { m } else { n })
+        .map(|ord| if ord == Ordering::Greater { m } else { n })
 }

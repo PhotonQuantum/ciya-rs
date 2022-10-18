@@ -1,25 +1,28 @@
-use image::{DynamicImage, GenericImageView};
-use opencv::core::{Mat, Vec3b};
+use image::{ImageBuffer, Rgb};
+use opencv::core::{DataType, Mat, MatTraitConst, Mat_AUTO_STEP, CV_MAKETYPE};
 
 use crate::errors::Result;
 
-// Convert rust image to opencv mat.
-// TODO: parallelize this conversion
-pub fn img_to_mat(image: &DynamicImage) -> Result<Mat> {
-    let (height, width) = (image.height() as usize, image.width() as usize);
-    let bytes = image.clone().into_bgr8().into_raw();
-    let mut mat_bytes: Vec<Vec<Vec3b>> = Vec::with_capacity(height);
-    let mut ptr = bytes.as_ptr();
-    for _ in 0..height {
-        let mut row = Vec::with_capacity(width);
-        for _ in 0..width {
-            unsafe {
-                let point = Vec3b::from([*ptr, *ptr.add(1), *ptr.add(2)]);
-                row.push(point);
-                ptr = ptr.add(3);
-            }
-        }
-        mat_bytes.push(row);
-    }
-    Ok(Mat::from_slice_2d(&mat_bytes)?)
+// Convert rgb image to opencv bgr mat zero-copy.
+pub fn img_to_mat(image: &ImageBuffer<Rgb<u8>, Vec<u8>>) -> Result<Mat> {
+    let (width, height) = image.dimensions();
+    let cv_type = CV_MAKETYPE(u8::depth(), 3);
+    let mat = {
+        // SAFETY: this creates a reference to the underlying data of the image buffer.
+        // However, it doesn't survive outside of this block.
+        let rgb = unsafe {
+            Mat::new_rows_cols_with_data(
+                height as i32,
+                width as i32,
+                cv_type,
+                image.as_ptr() as *mut _,
+                Mat_AUTO_STEP,
+            )
+        }?
+        .try_clone()?;
+        let mut bgr = Mat::default();
+        opencv::imgproc::cvt_color(&rgb, &mut bgr, opencv::imgproc::COLOR_RGB2BGR, 3)?;
+        bgr
+    };
+    Ok(mat)
 }

@@ -1,5 +1,4 @@
 use image::DynamicImage;
-
 pub use weeb::WeebDetector;
 
 use crate::errors::Result;

@@ -3,64 +3,54 @@ extern crate ciya_lib;
 use std::path::PathBuf;
 
 use anyhow::{anyhow, bail, Result};
-use clap::arg_enum;
+use ciya_lib::{
+    ciyafier::{Ciyafier, Emotion},
+    detectors::WeebDetector,
+};
+use clap::{Parser, ValueEnum};
 use image::io::Reader as ImageReader;
-use structopt::StructOpt;
-
-use ciya_lib::ciyafier::{Ciyafier, Emotion};
-use ciya_lib::detectors::WeebDetector;
 
 mod resources;
 
-arg_enum! {
-    #[derive(Debug, Copy, Clone)]
-    enum Mode{
-        Weeb,
-        Standard
-    }
+#[derive(Debug, Copy, Clone, ValueEnum)]
+enum Mode {
+    Weeb,
+    Standard,
 }
 
-arg_enum! {
-    #[derive(Debug, Copy, Clone)]
-    enum CliEmotion{
-        Auto,
-        Smile,
-        Cry
-    }
+#[derive(Debug, Copy, Clone, ValueEnum)]
+enum CliEmotion {
+    Auto,
+    Smile,
+    Cry,
 }
 
 impl From<CliEmotion> for Emotion {
     fn from(v: CliEmotion) -> Self {
         match v {
-            CliEmotion::Auto => Emotion::Auto,
-            CliEmotion::Smile => Emotion::Smile,
-            CliEmotion::Cry => Emotion::Cry,
+            CliEmotion::Auto => Self::Auto,
+            CliEmotion::Smile => Self::Smile,
+            CliEmotion::Cry => Self::Cry,
         }
     }
 }
 
-#[derive(Debug, Clone, StructOpt)]
-#[structopt(
-    name = "ciya-rs",
-    about = "Ciyaify your image.",
-    author = "LightQuantum <self@lightquantum.me>",
-    version = "0.1.0"
-)]
+#[derive(Debug, Clone, Parser)]
+#[command(name = "ciya-cli")]
+#[command(author, version, about)]
 struct Opt {
-    #[structopt(parse(from_os_str))]
     input: PathBuf,
-    #[structopt(parse(from_os_str))]
     output: PathBuf,
-    #[structopt(short, long, possible_values = & Mode::variants(), case_insensitive = true, default_value = "weeb")]
+    #[arg(short, long, value_enum, default_value_t = Mode::Weeb)]
     mode: Mode,
-    #[structopt(short, long, possible_values = & CliEmotion::variants(), case_insensitive = true, default_value = "auto")]
+    #[arg(short, long, value_enum, default_value_t = CliEmotion::Auto)]
     emotion: CliEmotion,
-    #[structopt(short, long, default_value = "8")]
+    #[arg(short, long, default_value_t = 8)]
     antialias_scale: u32,
 }
 
 fn main() -> Result<()> {
-    let opt: Opt = Opt::from_args();
+    let opt: Opt = Opt::parse();
     let detector = match opt.mode {
         Mode::Weeb => {
             let (face_model, landmark_model) = resources::ensure_models()?;
