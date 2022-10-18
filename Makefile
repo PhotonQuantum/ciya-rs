@@ -12,7 +12,7 @@ cli: download-ort
 
 bot: download-ort
 	mkdir -p dist
-	ORT_STRATEGY=system ORT_LIB_LOCATION=_build/${ONNXRUNTIME_NAME}/ RUSTFLAGS=${RUSTFLAGS} cargo build --bin ciya_bot --features webhook --release
+	ORT_STRATEGY=system ORT_LIB_LOCATION=_build/${ONNXRUNTIME_NAME}/ RUSTFLAGS=${RUSTFLAGS} cargo build --bin ciya_bot --release
 	cp target/release/ciya_bot dist/
 
 download-ort:
