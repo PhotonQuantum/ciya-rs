@@ -4,6 +4,7 @@ use std::{
     ops::{Add, Div, Mul, Sub},
 };
 
+use itertools::Itertools;
 use num::{Float, Num, NumCast};
 
 #[macro_export]
@@ -286,23 +287,29 @@ impl<T: Num + NumCast + PartialOrd + Copy> ControlPoints<T> {
         Some(y0.partial_cmp(&self.p2.y)?.is_gt() || y0.partial_cmp(&self.p4.y)?.is_lt())
     }
 
-    // noinspection RsBorrowChecker
     pub fn shift_origin(&self) -> Option<(Point<T>, Point<T>, Self)> {
         let cross = self.cross();
 
-        let left_top = self.p1 - cross + self.p2;
-        let right_top = self.p3 - cross + self.p2;
-        let left_bottom = self.p1 - cross + self.p4;
-        let right_bottom = self.p3 - cross + self.p4;
+        let px = self.p1 - cross + self.p2;
+        let py = self.p3 - cross + self.p2;
+        let pz = self.p1 - cross + self.p4;
+        let pw = self.p3 - cross + self.p4;
 
-        let bound_left_top = Point::new(
-            poset_min(left_top.x, left_bottom.x)? - cast!(4),
-            poset_min(left_top.y, right_top.y)? - cast!(4),
-        );
-        let bound_right_bottom = Point::new(
-            poset_max(right_top.x, right_bottom.x)? + cast!(4),
-            poset_max(left_bottom.y, right_bottom.y)? + cast!(4),
-        );
+        let (x_min, x_max) = [px, py, pz, pw]
+            .iter()
+            .map(|p| p.x)
+            .minmax()
+            .into_option()
+            .unwrap();
+        let (y_min, y_max) = [px, py, pz, pw]
+            .iter()
+            .map(|p| p.y)
+            .minmax()
+            .into_option()
+            .unwrap();
+
+        let bound_left_top = Point::new(x_min - cast!(4), y_min - cast!(4));
+        let bound_right_bottom = Point::new(x_max + cast!(4), y_max + cast!(4));
 
         Some((bound_left_top, bound_right_bottom, *self - bound_left_top))
     }
@@ -379,14 +386,4 @@ impl<T: Num + NumCast + PartialOrd + Copy> From<&ControlPoints<T>> for [(T, T); 
 pub fn user_abs_minus<T: Num + NumCast + PartialOrd + Copy>(m: T, n: T) -> Option<T> {
     m.partial_cmp(&n)
         .map(|ord| if ord == Ordering::Less { n - m } else { m - n })
-}
-
-pub fn poset_min<T: PartialOrd>(m: T, n: T) -> Option<T> {
-    m.partial_cmp(&n)
-        .map(|ord| if ord == Ordering::Less { m } else { n })
-}
-
-pub fn poset_max<T: PartialOrd>(m: T, n: T) -> Option<T> {
-    m.partial_cmp(&n)
-        .map(|ord| if ord == Ordering::Greater { m } else { n })
 }
