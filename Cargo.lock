@@ -1222,9 +1222,9 @@ checksum = "e82dad04139b71a90c080c8463fe0dc7902db5192d939bd0950f074d014339e1"
 
 [[package]]
 name = "opencv"
-version = "0.70.0"
+version = "0.74.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "744196bc6a3130b49fae8eb93e6994c586079cfc475db56eca9ba2d02916e713"
+checksum = "33bd2442759725e3ce38862b32acb1999de51e9f3f4310f3b01b7f0623091d74"
 dependencies = [
  "cc",
  "clang",
@@ -1242,9 +1242,9 @@ dependencies = [
 
 [[package]]
 name = "opencv-binding-generator"
-version = "0.48.0"
+version = "0.52.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c304a7154ac89c1979c5978d171964049011917e0c414c85d29bd5b8c4273fb9"
+checksum = "082d8259f4a7ea455e3553f9a1bc817520eb465a153bbf5ec0cb0b73590ee28d"
 dependencies = [
  "clang",
  "clang-sys",
