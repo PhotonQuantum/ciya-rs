@@ -36,7 +36,7 @@ opencv = { version = "0.70", features = ["objdetect", "imgproc"], default-featur
 pretty_env_logger = "0.4"
 reqwest = { version = "0.11", default-features = false, features = ["blocking", "rustls-tls"] }
 shellwords = "1.1"
-teloxide = { version = "0.11", default-features = false, features = ["ctrlc_handler", "rustls", "auto-send", "macros"] }
+teloxide = { version = "0.12", default-features = false, features = ["ctrlc_handler", "rustls", "auto-send", "macros"] }
 thiserror = "1.0"
 tokio = { version = "1.15", features = ["rt-multi-thread", "macros"] }
 webp = "0.2"
